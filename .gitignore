@@ -3,3 +3,6 @@
 
 # made from this folder (see the README)
 *.zip
+
+# Spotify's and SoundCloud's own scripts: install.sh downloads them (extension/lib/ABOUT.txt)
+extension/lib/*.js

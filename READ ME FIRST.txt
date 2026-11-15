@@ -17,7 +17,8 @@ SETTING IT UP (once)
 
 2. Open Terminal (Cmd + Space, type Terminal, press Return).
    Type  bash  and a space, then drag the file  install.sh  from this folder
-   into the Terminal window, and press Return.
+   into the Terminal window, and press Return. (The Mac needs to be online:
+   the installer downloads Spotify's and SoundCloud's own player scripts.)
 
 3. Stream Player opens. With Edge or Brave the player is there straight away.
    With Google Chrome it comes together with Chrome's Extensions page and a

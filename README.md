@@ -23,7 +23,7 @@ Unofficial, not made by or affiliated with Spotify or SoundCloud. Playing Spotif
 
 ## Install
 
-Needs a Mac with Google Chrome, Microsoft Edge or Brave.
+Needs a Mac with Google Chrome, Microsoft Edge or Brave, online while installing (the installer downloads Spotify's and SoundCloud's player scripts).
 
 1. Download this repository (**Code → Download ZIP**) and extract it.
 2. Open Terminal, type `bash ` (with a space), drag `install.sh` into the window and press Return.
@@ -85,7 +85,7 @@ Everything is in `extension/`. After a change, run `install.sh` again: it copies
 | Lyrics | `lyrics.js` |
 | Visualizer sound | `background.js` and `offscreen.js`: the extension listens to the player's own window and passes the sound on. |
 | The page | `player.html` and `boot.js` load the page; `host.js` connects it to the browser (window size for the compact player, the title bar colour). |
-| Spotify's and SoundCloud's own scripts | `lib/`, kept because extension pages may only run their own files. See `lib/ABOUT.txt`. |
+| Spotify's and SoundCloud's own scripts | `lib/`. `install.sh` downloads them from Spotify and SoundCloud each time it runs; they are not kept in this repository. See `lib/ABOUT.txt`. |
 
 ## How it works
 

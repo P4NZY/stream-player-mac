@@ -9,7 +9,8 @@
 #   1. finds a browser that can play Spotify's songs (Google Chrome, Microsoft
 #      Edge, Brave, Chromium or Vivaldi)
 #   2. copies the player (a browser extension) to
-#      ~/Library/Application Support/Stream Player/extension
+#      ~/Library/Application Support/Stream Player/extension, and downloads
+#      Spotify's and SoundCloud's own player scripts into it
 #   3. makes "Stream Player" in your Applications folder (in your home folder),
 #      with the player's icon: it opens the player in a window of its own,
 #      with its own sign-in, separate from your normal browsing - and stays
@@ -69,9 +70,42 @@ if [ -n "$OPEN_PIDS" ]; then
 fi
 pkill -f "$APP/Contents/MacOS/applet" 2>/dev/null || true   # (the app, if it is still open)
 
+# (the services' own scripts from the last install, in case they cannot be
+#  downloaded this time - see below)
+OLD_LIB="$(mktemp -d)"
+cp "$SUPPORT/extension/lib/"*.js "$OLD_LIB/" 2>/dev/null || true
 rm -rf "$SUPPORT/extension"
 cp -R "$HERE/extension" "$SUPPORT/extension"
 xattr -dr com.apple.quarantine "$SUPPORT/extension" 2>/dev/null || true
+
+# Spotify's and SoundCloud's own scripts (see extension/lib/ABOUT.txt) come
+# straight from Spotify and SoundCloud, so the player has their current ones
+# (and this folder does not pass copies of them around).
+mkdir -p "$SUPPORT/extension/lib"
+fetch_lib() {   # fetch_lib <file> <address> <a word the real file has in it>
+  local dest="$SUPPORT/extension/lib/$1" tmp
+  tmp="$(mktemp)"
+  if curl -fsSL --max-time 40 -o "$tmp" "$2" 2>/dev/null && grep -q "$3" "$tmp"; then
+    mv "$tmp" "$dest"
+    return 0
+  fi
+  rm -f "$tmp"
+  if [ -s "$OLD_LIB/$1" ]; then
+    cp "$OLD_LIB/$1" "$dest"
+    say "(could not download $1 just now: the copy from the last install stays)"
+    return 0
+  fi
+  if [ -s "$HERE/extension/lib/$1" ]; then return 0; fi
+  return 1
+}
+if ! fetch_lib spotify-player.js "https://sdk.scdn.co/spotify-player.js" "onSpotifyWebPlaybackSDKReady" ||
+   ! fetch_lib sc-widget-api.js "https://w.soundcloud.com/player/api.js" "Widget"; then
+  say "Could not download Spotify's and SoundCloud's player scripts - is the Mac online?"
+  say "Run install.sh again once it is."
+  rm -rf "$OLD_LIB"
+  exit 1
+fi
+rm -rf "$OLD_LIB"
 # Which browser, for the app. (Not in a file called "browser": to a Mac's disk
 # that is the same name as the profile folder "Browser" - capitals do not count.)
 printf '%s\n' "$BROWSER_APP" > "$SUPPORT/browser-app"

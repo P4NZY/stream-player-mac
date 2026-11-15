@@ -1,5 +1,5 @@
-These two files are the services' own, kept here because a browser extension
-may only run files of its own (it cannot load scripts from the web):
+Spotify's and SoundCloud's own scripts go here. install.sh downloads them from
+the services each time it runs (they are not kept in this repository):
 
   spotify-player.js   Spotify's Web Playback SDK loader
                       https://sdk.scdn.co/spotify-player.js
@@ -11,5 +11,6 @@ may only run files of its own (it cannot load scripts from the web):
                       embeddable player
                       https://w.soundcloud.com/player/api.js
 
-To bring either up to date, download it again from its address over the copy
-here, then run install.sh again.
+They are kept with the installed player (not loaded from the web by the page)
+because a browser extension may only run files of its own. To bring them up to
+date, run install.sh again.
