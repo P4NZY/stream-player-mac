@@ -1,0 +1,147 @@
+STREAM PLAYER FOR MAC
+=====================
+
+The Music Player, for Spotify and SoundCloud: the same retro hi-fi player -
+library, playlists, themes, visualizer, lyrics, queue, the compact player that
+floats on top - with a switch at the top to flip between the two services.
+
+It runs inside Google Chrome (or Microsoft Edge or Brave), in a window of its
+own with its own icon, apart from your everyday browsing. It is a separate app
+from Music Player (the Apple Music one): both can be installed side by side.
+
+
+SETTING IT UP (once)
+--------------------
+1. Put this whole "Stream Player for Mac" folder anywhere on the Mac
+   (Documents, say).
+
+2. Open Terminal (Cmd + Space, type Terminal, press Return).
+   Type  bash  and a space, then drag the file  install.sh  from this folder
+   into the Terminal window, and press Return.
+
+3. Stream Player opens. With Edge or Brave the player is there straight away.
+   With Google Chrome it comes together with Chrome's Extensions page and a
+   window with directions, the first time: switch on "Developer mode", click
+   "Load unpacked", press Cmd + Shift + G, paste
+       ~/Library/Application Support/Stream Player/extension
+   press Return, click "Select", close the Extensions page and press Cmd + R.
+
+4. Connect the services - the player walks you through it (ACCOUNT, bottom
+   left, for whichever service the switch is set to). See below.
+
+From then on just open "Stream Player" - it is in the Applications folder in
+your home folder, in Launchpad and in Spotlight. Drag it to the Dock.
+
+
+THE SWITCH
+----------
+At the top, next to the name: SPOTIFY [=] SOUNDCLOUD. Click it (or press
+Ctrl + S) to flip to the other service. The library on the left, the browser,
+search, the deck and the queue all change over. Whatever was playing on the
+service you leave is paused; each keeps its own queue and place, so flipping
+back finds it as it was.
+
+
+SPOTIFY
+-------
+Spotify lets players like this one in only through an app of your own, made
+on Spotify's developer dashboard. It is free and takes about a minute, once:
+the player's ACCOUNT page (with the switch on SPOTIFY) shows the steps, with a
+button for each:
+  1. open the developer dashboard and log in with your Spotify account
+  2. Create app - any name; Redirect URI:  http://127.0.0.1:43117/spotify
+  3. tick "Web API" and "Web Playback SDK", save
+  4. copy the app's Client ID into the player, press CONNECT, and sign in on
+     Spotify's own page in the small window that opens.
+
+What to know:
+- Playing needs Spotify Premium (Spotify's rule for every player outside its
+  own apps), and the app you made only works while your account has Premium.
+- Your library is Spotify's: Liked Songs, saved albums, followed artists, your
+  playlists. Saving a song, an album or a playlist, adding to a playlist and
+  making a new one change your Spotify account, so they show up in Spotify's
+  own apps too.
+- Spotify only shows other players the songs of playlists that are your own.
+  Other people's playlists (and Spotify's) still play - PLAY or SHUFFLE on
+  their page - and the queue fills in as they go.
+- Spotify no longer gives other players an artist's top songs; an artist's
+  page shows their albums and singles.
+- Spotify asks for the sign-in again every six months; the player says so.
+- While the player is open it is one of your Spotify Connect devices,
+  "Stream Player", so your phone can see and control it too.
+
+
+SOUNDCLOUD
+----------
+SoundCloud only lets players like this one into its API (search, your own
+account's library) when they are registered by SoundCloud Artist Pro
+subscribers. What it offers everyone is its own embeddable player - the one
+on blogs and band pages - and that is what plays here. So:
+- Nothing to sign in to. Every public song, playlist, album and artist plays.
+  Go+ songs play as 30-second previews (as they do for anyone signed out).
+- "Likes & Saved": put your profile link in (ACCOUNT, with the switch on
+  SOUNDCLOUD - it looks like soundcloud.com/yourname) and your public likes
+  show up there, along with songs you save in the player.
+- Playlists you make, and songs, playlists, albums and artists you save, are
+  kept by the player, on this Mac (not on your SoundCloud account).
+- Search: paste a SoundCloud link (a song, playlist, album or artist) into the
+  search box. To search by words, "Browse SoundCloud" opens SoundCloud in a
+  window of its own: open a song, playlist or artist there and the player's
+  "Browse SoundCloud" page offers PLAY IT HERE, SHOW IT HERE and SAVE IT HERE.
+- "History" lists what you played here.
+
+
+LYRICS
+------
+Neither service gives other players lyrics, so they come from LRCLIB
+(lrclib.net), a free, open lyrics collection: most are timed line by line and
+follow the song. Songs it does not know show "no lyrics". On SoundCloud the
+title is often "Artist - Song (Official Audio)"; the player reads it that way.
+
+
+THE COMPACT PLAYER FLOATS ON TOP
+--------------------------------
+As in Music Player: COMPACT (or Ctrl + M) puts the small player in a little
+window of its own that stays above every other window, whatever app you use.
+LIBRARY (or closing it) brings the full player back. The pin key switches the
+floating off and on ("Keep on top" under THEMES).
+
+
+THE VISUALIZER HEARS THE MUSIC
+------------------------------
+Started from the Stream Player app, the visualizer follows the music of both
+services by itself (the browser lets the player's extension listen to its own
+window; nothing leaves your Mac). If it ever shows DEMO, it is moving to a
+built-in beat because it could not hear the music; it says why on the picture.
+
+
+STREAM PLAYER IN THE DOCK
+-------------------------
+Stream Player stays open as long as the player is, so the Dock shows the dot
+under it. Click it (or pick it with Cmd + Tab) and the player comes to the
+front. Quit it and the player quits too; quit the player (Cmd + Q in its
+window) and Stream Player goes too. The browser the player runs in shows in
+the Dock as well: it is a second copy of that browser, the player's own.
+
+
+UPDATING
+--------
+Copy the newer "Stream Player for Mac" folder over this one and run install.sh
+again. If the player is open, install.sh closes it first and opens it again at
+the end. Your sign-ins, settings and saved things stay.
+
+
+IF SOMETHING GOES WRONG
+-----------------------
+- "Stream Player" says something has moved: run install.sh again.
+- The window shows an error page instead of the player (Chrome): the
+  extension is not switched on - do step 3 again, then Cmd + R.
+- Spotify: "playing needs Spotify Premium" - the account (and the developer
+  app's owner) needs Premium. "this browser cannot play Spotify" - with Brave,
+  check brave://settings/extensions that Widevine is on, then reopen.
+- Spotify sign-in says the redirect URI is wrong: in your app's settings on
+  the dashboard it must be exactly  http://127.0.0.1:43117/spotify
+- SoundCloud likes stay empty: the profile link has to be your public profile,
+  and your likes have to be public on SoundCloud.
+- To remove it: delete "Stream Player" from your Applications folder and the
+  folder ~/Library/Application Support/Stream Player

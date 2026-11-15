@@ -1,0 +1,15 @@
+These two files are the services' own, kept here because a browser extension
+may only run files of its own (it cannot load scripts from the web):
+
+  spotify-player.js   Spotify's Web Playback SDK loader
+                      https://sdk.scdn.co/spotify-player.js
+                      It only opens Spotify's player (sdk.scdn.co) in a hidden
+                      frame and talks to it; the player itself always comes
+                      fresh from Spotify.
+
+  sc-widget-api.js    SoundCloud's Widget API, for driving SoundCloud's
+                      embeddable player
+                      https://w.soundcloud.com/player/api.js
+
+To bring either up to date, download it again from its address over the copy
+here, then run install.sh again.

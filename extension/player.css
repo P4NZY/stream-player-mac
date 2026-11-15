@@ -1,0 +1,1935 @@
+/* ==========================================================================
+   Music Player skin
+   Injected into music.apple.com by MusicPlayer.exe (see player.js).
+
+   The app is drawn as one piece of retro hi-fi gear:
+     chassis  - the coloured metal: strips, side panel, keys
+     LCD      - the dark displays with glowing ink
+     lamp     - the small lit colour used for LEDs and active keys
+
+   player.js sets on <html>:
+     data-mp-theme="midnight|classic|..."   active colour theme
+     data-mp-mode="full|compact|apple"      which face of the app is showing
+         full     the player: deck, library, browser, queue (our own layout)
+         compact  the small player: deck + queue
+         apple    Apple's own pages, dressed in the same chassis
+     data-mp-layout="side|top"              (apple mode) is Apple's sidebar shown
+   and generates one rule per theme with the raw colours:
+     --mp-shell-a / --mp-shell-b   chassis gradient (top / bottom)
+     --mp-shell-text               labels printed on the chassis
+     --mp-lit                      lamp colour
+     --mp-lcd-bg / --mp-lcd-fg     display background / ink
+
+   Edit this file and restart the app to change the look. No rebuild needed.
+   ========================================================================== */
+
+html[data-mp-theme] {
+  --mp-f-ui: "Segoe UI Variable Text", "Segoe UI", "Yu Gothic UI", "Meiryo UI", system-ui, sans-serif;
+  --mp-f-mono: "Cascadia Mono", "Cascadia Code", Consolas, "MS Gothic", monospace;
+  --mp-f-jp: "Yu Gothic UI", "Meiryo UI", "Yu Gothic", "MS Gothic", sans-serif;
+  --mp-f-mincho: "Yu Mincho", "MS Mincho", "Yu Gothic UI", serif;
+
+  /* bevels, derived from the chassis colours */
+  --mp-hi: color-mix(in srgb, #fff 17%, var(--mp-shell-a));
+  --mp-lo: color-mix(in srgb, #000 40%, var(--mp-shell-b));
+  --mp-edge: color-mix(in srgb, #000 58%, var(--mp-shell-b));
+  --mp-shell-dim: color-mix(in srgb, var(--mp-shell-text) 68%, transparent);
+  --mp-pat: color-mix(in srgb, var(--mp-shell-text) 6%, transparent);
+
+  /* display inks, derived from the LCD colours */
+  --mp-lcd-text: color-mix(in srgb, var(--mp-lcd-fg) 55%, #fff);
+  --mp-lcd-soft: color-mix(in srgb, var(--mp-lcd-fg) 76%, var(--mp-lcd-bg));
+  --mp-lcd-dim: color-mix(in srgb, var(--mp-lcd-fg) 60%, var(--mp-lcd-bg));
+  --mp-lcd-faint: color-mix(in srgb, var(--mp-lcd-fg) 13%, var(--mp-lcd-bg));
+  --mp-lcd-line: color-mix(in srgb, var(--mp-lcd-fg) 16%, var(--mp-lcd-bg));
+  --mp-panel: color-mix(in srgb, var(--mp-lcd-fg) 9%, var(--mp-lcd-bg));
+  --mp-glow: 0 0 9px color-mix(in srgb, var(--mp-lcd-fg) 55%, transparent);
+
+  /* shippo (interlocking circles), a traditional Japanese pattern, pressed
+     faintly into the metal. Used as a background layer on chassis panels. */
+  --mp-shippo:
+    radial-gradient(circle at 50% 50%, transparent 16.4px, var(--mp-pat) 17px, var(--mp-pat) 17.6px, transparent 18.2px) 0 0 / 36px 36px,
+    radial-gradient(circle at 50% 50%, transparent 16.4px, var(--mp-pat) 17px, var(--mp-pat) 17.6px, transparent 18.2px) 18px 18px / 36px 36px;
+}
+
+/* In the player's own faces Apple's page is not drawn at all (it keeps
+   running underneath: it is what actually plays the music). Not drawing it is
+   also what makes these faces quick. */
+html[data-mp-mode="full"] .body-container,
+html[data-mp-mode="compact"] .body-container { display: none !important; }
+/* "keep on top" needs the Windows app, or (Mac) a browser that can float a page: data-mp-pin */
+html:not([data-mp-host="windows"]):not([data-mp-pin="1"]) [data-act="ontop"],
+html:not([data-mp-host="windows"]):not([data-mp-pin="1"]) [data-opt="onTop"] { display: none !important; }
+
+/* the window is minimised or covered (player.js: setSeen): nothing animates */
+html[data-mp-seen="0"] *,
+html[data-mp-seen="0"] *::before,
+html[data-mp-seen="0"] *::after { animation-play-state: paused !important; }
+html[data-mp-mode="full"] body,
+html[data-mp-mode="compact"] body { overflow: hidden !important; }
+
+/* --------------------------------------------------------------------------
+   1. Apple's own pages (mode "apple"), re-inked
+   Apple's class names carry build hashes (svelte-xxxx) that change over time,
+   so everything here hangs off its CSS variables, data-testid attributes and
+   the un-hashed class names only.
+
+   The mapping is declared on <html> and again on .app-container, because
+   Apple re-declares its own colours on that element for album and playlist
+   pages (.is-dark-theme).
+   -------------------------------------------------------------------------- */
+
+html[data-mp-theme],
+html[data-mp-theme] .app-container {
+  --pageBG: var(--mp-lcd-bg) !important;
+  --pageBG-rgb: var(--mp-lcd-bg-rgb) !important;
+
+  --systemPrimary: var(--mp-lcd-text) !important;
+  --systemPrimary-onDark: var(--mp-lcd-text) !important;
+  --systemPrimary-vibrant: var(--mp-lcd-text) !important;
+  --systemPrimary-vibrantOnDark: var(--mp-lcd-text) !important;
+  --systemSecondary: var(--mp-lcd-soft) !important;
+  --systemSecondary-onDark: var(--mp-lcd-soft) !important;
+  --systemSecondary-vibrant: var(--mp-lcd-soft) !important;
+  --systemSecondary-vibrantOnDark: var(--mp-lcd-soft) !important;
+  --systemTertiary: var(--mp-lcd-dim) !important;
+  --systemTertiary-onDark: var(--mp-lcd-dim) !important;
+  --systemTertiary-vibrant: var(--mp-lcd-dim) !important;
+  --systemTertiary-vibrantOnDark: var(--mp-lcd-dim) !important;
+  --labelDivider: color-mix(in srgb, var(--mp-lcd-fg) 18%, transparent) !important;
+  --labelDivider-vibrant: color-mix(in srgb, var(--mp-lcd-fg) 18%, transparent) !important;
+
+  --keyColor: var(--mp-lcd-fg) !important;
+  --keyColor-rgb: var(--mp-lcd-fg-rgb) !important;
+  --keyColorBG: var(--mp-lcd-fg) !important;
+  --musicKeyColor: var(--mp-lcd-fg) !important;
+  --keyColor-focus-color: color-mix(in srgb, var(--mp-lcd-fg) 55%, transparent) !important;
+  --selectionColor: color-mix(in srgb, var(--mp-lcd-fg) 30%, transparent) !important;
+
+  --glassMaterialBackground: color-mix(in srgb, var(--mp-panel) 95%, transparent) !important;
+  --fallbackMaterialBG: var(--mp-panel) !important;
+  --playerBackground: var(--mp-panel) !important;
+  --playerBackgroundFallback: var(--mp-panel) !important;
+  --miniPlayerBackground: var(--mp-panel) !important;
+  --dropdownBackground: var(--mp-panel) !important;
+  --mobileNavigationBG: var(--mp-shell-b) !important;
+  --footerBg: var(--mp-lcd-bg) !important;
+}
+
+html[data-mp-theme] body {
+  background-color: var(--mp-lcd-bg) !important;
+  background-image: none !important;
+}
+
+/* Apple tints album / playlist pages with the artwork colour; keep the display */
+html[data-mp-theme] .app-container.has-theme-override .scrollable-page {
+  background: transparent !important;
+}
+
+html[data-mp-theme] ::selection {
+  background: color-mix(in srgb, var(--mp-lcd-fg) 38%, transparent);
+}
+
+/* Page and shelf titles are "printed" on the display */
+html[data-mp-theme] .header-nav__heading,
+html[data-mp-theme] h2[data-testid="header-title"],
+html[data-mp-theme] h2[data-testid="header-title"] a {
+  font-family: var(--mp-f-mono) !important;
+  color: var(--mp-lcd-fg) !important;
+  text-shadow: var(--mp-glow);
+}
+
+/* Things this app has no use for: subscribe / country banners, the
+   "Open in Music" button (it launches the Windows app), the legal footer. */
+html[data-mp-theme] [data-testid="upsell-banner"],
+html[data-mp-theme] [data-testid="banner-container"],
+html[data-mp-theme] .navigation__native-cta .native-cta,
+html[data-mp-theme] [data-testid="footer"] {
+  display: none !important;
+}
+
+/* Slim scrollbars in display ink */
+html[data-mp-theme] ::-webkit-scrollbar { width: 12px; height: 12px; }
+html[data-mp-theme] ::-webkit-scrollbar-track { background: transparent; }
+html[data-mp-theme] ::-webkit-scrollbar-thumb {
+  background-color: var(--mp-lcd-dim);
+  border: 4px solid transparent;
+  border-radius: 8px;
+  background-clip: padding-box;
+}
+html[data-mp-theme] ::-webkit-scrollbar-thumb:hover { background-color: var(--mp-lcd-soft); }
+html[data-mp-theme] ::-webkit-scrollbar-corner { background: transparent; }
+
+/* ---- Apple's sidebar = chassis panel ---- */
+html[data-mp-theme] .app-container nav.navigation {
+  --systemPrimary: var(--mp-shell-text) !important;
+  --systemSecondary: var(--mp-shell-dim) !important;
+  --systemTertiary: color-mix(in srgb, var(--mp-shell-text) 48%, transparent) !important;
+  --labelDivider: color-mix(in srgb, var(--mp-shell-text) 16%, transparent) !important;
+  --keyColor: var(--mp-lit) !important;
+  --musicKeyColor: var(--mp-lit) !important;
+  --keyColorBG: var(--mp-lit) !important;
+
+  color: var(--mp-shell-text) !important;
+  background: var(--mp-shippo), linear-gradient(180deg, var(--mp-shell-a), var(--mp-shell-b)) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 0 !important;
+  box-shadow: inset 1px 1px 0 var(--mp-hi) !important;
+}
+
+html[data-mp-theme] .navigation-item {
+  border-radius: 7px !important;
+}
+/* Apple colours each sidebar icon separately; light them all in the lamp colour */
+html[data-mp-theme] .navigation-item__icon svg { fill: var(--mp-lit) !important; }
+html[data-mp-theme] .navigation-item--selected .navigation-item__icon svg { fill: var(--mp-lcd-fg) !important; }
+html[data-mp-theme] .navigation-item:hover {
+  background: linear-gradient(180deg, var(--mp-hi), var(--mp-shell-b));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 22%, transparent), 0 1px 2px rgba(0, 0, 0, .35);
+}
+/* the current page is a small lit display window */
+html[data-mp-theme] .navigation-item--selected,
+html[data-mp-theme] .navigation-item--selected:hover {
+  --keyColor: var(--mp-lcd-fg) !important;
+  --musicKeyColor: var(--mp-lcd-fg) !important;
+  --systemPrimary: var(--mp-lcd-fg) !important;
+  background: var(--mp-lcd-bg) !important;
+  box-shadow: inset 0 0 0 1px var(--mp-edge), inset 0 2px 5px rgba(0, 0, 0, .65), 0 1px 0 var(--mp-hi) !important;
+}
+html[data-mp-theme] .navigation-item--selected .navigation-item__link,
+html[data-mp-theme] .navigation-item--selected .navigation-item__label {
+  color: var(--mp-lcd-fg) !important;
+  text-shadow: var(--mp-glow);
+  font-weight: 600;
+}
+/* Japanese reading next to each sidebar entry (set by player.js) */
+html[data-mp-theme] .navigation-item__label[data-jp]::after {
+  content: attr(data-jp);
+  float: right;
+  margin-left: 8px;
+  font: 10.5px/1.9 var(--mp-f-jp);
+  letter-spacing: .06em;
+  opacity: .58;
+  text-shadow: none;
+}
+
+/* ---- Apple's playback bar = a deck with its own display ---- */
+html[data-mp-theme] .player-bar { bottom: 14px !important; }
+
+html[data-mp-theme] .chrome-player,
+html[data-mp-theme] .mini-player > .mini-player {
+  --systemPrimary: var(--mp-shell-text) !important;
+  --systemSecondary: var(--mp-shell-dim) !important;
+  --systemTertiary: color-mix(in srgb, var(--mp-shell-text) 48%, transparent) !important;
+  --keyColor: var(--mp-lit) !important;
+  --musicKeyColor: var(--mp-lit) !important;
+  color: var(--mp-shell-text) !important;
+  border-radius: 10px !important;
+}
+html[data-mp-theme] .chrome-player {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .5) !important;
+}
+html[data-mp-theme] .chrome-player::before,
+html[data-mp-theme] .mini-player > .mini-player {
+  background: linear-gradient(180deg, var(--mp-hi), var(--mp-shell-b)) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-radius: 10px !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 26%, transparent), inset 0 0 0 1px var(--mp-edge) !important;
+}
+
+html[data-mp-theme] .chrome-player__lcd {
+  --systemPrimary: var(--mp-lcd-text) !important;
+  --systemSecondary: var(--mp-lcd-soft) !important;
+  --systemTertiary: var(--mp-lcd-dim) !important;
+  --keyColor: var(--mp-lcd-fg) !important;
+  --musicKeyColor: var(--mp-lcd-fg) !important;
+  position: relative;
+  isolation: isolate;
+  color: var(--mp-lcd-text) !important;
+}
+html[data-mp-theme] .chrome-player__lcd::before {
+  content: "";
+  position: absolute;
+  inset: 5px 0;
+  z-index: -1;
+  border-radius: 6px;
+  background: var(--mp-lcd-bg);
+  box-shadow: inset 0 0 0 1px var(--mp-edge), inset 0 2px 6px rgba(0, 0, 0, .65), 0 1px 0 var(--mp-hi);
+}
+html[data-mp-theme] .chrome-player__lcd .lcd-meta {
+  font-family: var(--mp-f-mono) !important;
+  text-shadow: var(--mp-glow);
+}
+
+/* ---- raised key: ours (.mp-key) and Apple's pill buttons ---- */
+.mp-key,
+html[data-mp-theme] .button.pill button,
+html[data-mp-theme] .button.pill a,
+html[data-mp-theme] .commerce-button.signin {
+  color: var(--mp-shell-text) !important;
+  background: linear-gradient(180deg, var(--mp-hi), var(--mp-shell-b)) !important;
+  border: 1px solid var(--mp-edge) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 24%, transparent), 0 1px 2px rgba(0, 0, 0, .35);
+  transition: filter .1s ease, transform .05s ease;
+}
+html[data-mp-theme] .button.pill button,
+html[data-mp-theme] .button.pill a,
+html[data-mp-theme] .commerce-button.signin {
+  --keyColor: var(--mp-shell-text) !important;
+  --systemPrimary: var(--mp-shell-text) !important;
+  border-radius: 8px !important;
+}
+.mp-key:hover,
+html[data-mp-theme] .button.pill button:hover,
+html[data-mp-theme] .button.pill a:hover,
+html[data-mp-theme] .commerce-button.signin:hover { filter: brightness(1.14); }
+.mp-key:active,
+html[data-mp-theme] .button.pill button:active,
+html[data-mp-theme] .commerce-button.signin:active {
+  transform: translateY(1px);
+  filter: brightness(.94);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .5);
+}
+.mp-key:disabled { opacity: .45; pointer-events: none; }
+
+/* --------------------------------------------------------------------------
+   2. Shared bits for everything this skin adds (class .mp-ui)
+   :where() keeps these resets weaker than every component rule below.
+   -------------------------------------------------------------------------- */
+
+:where(.mp-ui), :where(.mp-ui) * { box-sizing: border-box; }
+:where(.mp-ui) button {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: center;
+}
+:where(.mp-ui) button:focus-visible {
+  outline: 2px solid var(--mp-lit);
+  outline-offset: 2px;
+}
+:where(.mp-ui) img, :where(.mp-ui) svg, :where(.mp-ui) canvas { display: block; }
+:where(.mp-ui) svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
+
+/* Japanese text. Apple's page ships its own font rules for lang="ja", so the
+   families here are forced. */
+.mp-jp, .mpc-chip-state, .mpc-pl-total, .mpb-meta { font-family: var(--mp-f-jp) !important; }
+.mp-seal, .mpf-kanji, .mpc-pl-kanji, .mpb-kanji, .mpl-kanji { font-family: var(--mp-f-mincho) !important; }
+.mpl-line, .mpl-line *, .mpv-lyric, .mpv-lyric * { font-family: var(--mp-f-ui) !important; }
+
+/* engraved ridges used as filler on strips */
+.mp-grip {
+  flex: 1;
+  min-width: 14px;
+  height: 11px;
+  border-radius: 2px;
+  opacity: .75;
+  background: repeating-linear-gradient(180deg, var(--mp-hi) 0 1px, var(--mp-lo) 1px 2px, transparent 2px 4px);
+}
+
+/* small lamp */
+.mp-led {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mp-lo);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .6);
+}
+[data-on="1"] > .mp-led,
+[aria-checked="true"] .mp-led,
+.mp-led[data-on="1"] {
+  background: var(--mp-lit);
+  box-shadow: 0 0 6px var(--mp-lit);
+}
+
+/* hanko-style seal with the kanji for "sound" */
+.mp-seal {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid currentColor;
+  border-radius: 6px;
+  color: var(--mp-lit);
+  background: color-mix(in srgb, var(--mp-lit) 13%, transparent);
+  font: 700 15px/1 var(--mp-f-mincho);
+  transform: rotate(-6deg);
+}
+
+/* --------------------------------------------------------------------------
+   3. Apple mode extras: brand plate, sidebar keys, display frame
+   -------------------------------------------------------------------------- */
+
+/* brand plate, replaces the logo at the top of Apple's sidebar */
+.mp-brand {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px 6px 14px;
+  color: var(--mp-shell-text);
+  font-family: var(--mp-f-ui);
+  container-type: inline-size;
+}
+html[data-mp-layout="side"] .mp-brand { display: flex; }
+html[data-mp-layout="side"] .navigation__header [data-testid="logo"] { display: none !important; }
+.mp-brand-logo {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--mp-edge);
+  box-shadow: 0 1px 0 var(--mp-hi), 0 2px 6px rgba(0, 0, 0, .35);
+}
+.mp-brand-text { flex: 1; min-width: 0; display: grid; gap: 4px; line-height: 1; }
+.mp-brand-en { font-size: 11px; font-weight: 800; letter-spacing: .2em; white-space: nowrap; }
+.mp-brand-jp { font: 10.5px/1 var(--mp-f-jp); letter-spacing: .1em; opacity: .75; white-space: nowrap; }
+@container (max-width: 210px) {
+  .mp-brand .mp-seal { display: none; }
+}
+
+/* keys with an English label over its Japanese reading */
+.mp-side {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  font-family: var(--mp-f-ui);
+  container-type: inline-size;
+}
+.mp-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 42px;
+  padding: 0 9px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.mp-btn-label { display: grid; gap: 4px; min-width: 0; line-height: 1; text-align: left; }
+.mp-btn-en { font-size: 10px; font-weight: 800; letter-spacing: .14em; white-space: nowrap; }
+.mp-btn-jp { font: 9.5px/1 var(--mp-f-jp); letter-spacing: .08em; opacity: .72; white-space: nowrap; }
+@container (max-width: 232px) {
+  .mp-btn { padding: 0 7px; gap: 6px; }
+  .mp-btn svg { display: none; }
+}
+
+/* floating versions, shown only when Apple hides its sidebar (narrow window) */
+#mp-fab {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: 92px;
+  z-index: 2147483000;
+  flex-direction: column;
+  gap: 8px;
+}
+html[data-mp-mode="apple"] #mp-fab[data-show="1"] { display: flex; }
+#mp-fab .mp-btn {
+  flex: none;
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 24%, transparent), 0 8px 20px rgba(0, 0, 0, .45);
+}
+#mp-fab .mp-btn-label, #mp-fab .mp-led { display: none; }
+
+/* The display frame: a chassis-coloured ring around Apple's content area with
+   a recessed edge and a kanji watermark. It is an overlay that ignores the
+   mouse, so Apple's own layout and scrolling are untouched.
+   player.js keeps --mpf-left / --mpf-top on the sidebar's edge. */
+#mp-frame {
+  --ring: 8px;
+  --rad: 10px;
+  display: none;
+  position: fixed;
+  left: var(--mpf-left, 260px);
+  top: var(--mpf-top, 0px);
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+}
+html[data-mp-mode="apple"] #mp-frame { display: block; }
+#mp-frame > i { position: absolute; display: block; }
+.mpf-top { left: 0; right: 0; top: 0; height: var(--ring); background: var(--mp-shell-a); box-shadow: inset 0 1px 0 var(--mp-hi); }
+.mpf-bottom { left: 0; right: 0; bottom: 0; height: var(--ring); background: var(--mp-shell-b); }
+.mpf-left { left: 0; top: 0; bottom: 0; width: var(--ring); background: linear-gradient(180deg, var(--mp-shell-a), var(--mp-shell-b)); }
+.mpf-c1, .mpf-c2 { left: var(--ring); width: var(--rad); height: var(--rad); }
+.mpf-c1 { top: var(--ring); background: radial-gradient(circle at 100% 100%, transparent calc(var(--rad) - .6px), var(--mp-shell-a) var(--rad)); }
+.mpf-c2 { bottom: var(--ring); background: radial-gradient(circle at 100% 0, transparent calc(var(--rad) - .6px), var(--mp-shell-b) var(--rad)); }
+.mpf-glass {
+  inset: var(--ring) 0 var(--ring) var(--ring);
+  border-radius: var(--rad) 0 0 var(--rad);
+  box-shadow: inset 1px 0 0 var(--mp-edge), inset 0 1px 0 var(--mp-edge), inset 0 -1px 0 var(--mp-edge),
+              inset 0 4px 12px rgba(0, 0, 0, .55), inset 4px 0 12px rgba(0, 0, 0, .3);
+}
+.mpf-kanji {
+  right: 30px;
+  bottom: 92px;
+  writing-mode: vertical-rl;
+  font: 700 112px/1 var(--mp-f-mincho);
+  letter-spacing: .06em;
+  color: var(--mp-lcd-fg);
+  opacity: .05;
+}
+html[data-mp-layout="top"] .mpf-kanji { font-size: 72px; }
+
+/* --------------------------------------------------------------------------
+   4. Themes & settings panel (a small chassis of its own)
+   -------------------------------------------------------------------------- */
+
+#mp-panel-wrap {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483640;
+  place-items: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, .6);
+  font-family: var(--mp-f-ui);
+}
+#mp-panel-wrap[data-open="1"] { display: grid; }
+
+.mp-panel {
+  width: min(476px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  border-radius: 12px;
+  color: var(--mp-shell-text);
+  background: linear-gradient(180deg, var(--mp-shell-a), var(--mp-shell-b));
+  border: 1px solid var(--mp-edge);
+  box-shadow: inset 0 1px 0 var(--mp-hi), 0 24px 64px rgba(0, 0, 0, .6);
+}
+.mp-panel::-webkit-scrollbar-thumb { background-color: var(--mp-shell-dim) !important; }
+.mp-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--mp-edge);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--mp-hi) 60%, transparent);
+}
+.mp-panel-title { font-size: 11px; font-weight: 800; letter-spacing: .24em; }
+.mp-panel-title-jp { font: 11px/1 var(--mp-f-jp); letter-spacing: .12em; opacity: .75; }
+.mp-x { width: 28px; height: 24px; border-radius: 6px; display: grid; place-items: center; }
+.mp-x svg { width: 13px; height: 13px; }
+.mp-panel-body { padding: 12px 14px 14px; }
+.mp-panel-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .22em;
+}
+.mp-panel-sub .mp-jp { font-weight: 400; letter-spacing: .1em; opacity: .75; }
+
+.mp-themes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+}
+.mp-swatch {
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  text-align: left;
+}
+.mp-swatch:hover { background: color-mix(in srgb, var(--mp-shell-text) 9%, transparent); }
+.mp-swatch[aria-pressed="true"] {
+  background: var(--mp-lcd-bg);
+  border-color: var(--mp-edge);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .6), 0 1px 0 var(--mp-hi);
+  color: var(--mp-lcd-fg);
+}
+/* miniature of the theme: chassis, lamp, display with bars */
+.mp-swatch-prev {
+  position: relative;
+  height: 50px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, .55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+.mp-swatch-dot { position: absolute; left: 8px; top: 8px; width: 7px; height: 7px; border-radius: 50%; }
+.mp-swatch-lcd {
+  position: absolute;
+  left: 22px;
+  right: 7px;
+  top: 7px;
+  bottom: 7px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 4px 5px;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, .7);
+}
+.mp-swatch-lcd i { flex: 1; border-radius: 1px; }
+.mp-swatch-name { display: flex; align-items: baseline; gap: 6px; padding: 0 2px 1px; line-height: 1.1; }
+.mp-swatch-en { font-size: 12px; font-weight: 700; }
+.mp-swatch-jp { font: 10.5px/1 var(--mp-f-jp); opacity: .75; white-space: nowrap; }
+
+.mp-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  padding: 9px 0;
+  border-top: 1px solid color-mix(in srgb, var(--mp-shell-text) 14%, transparent);
+  font-size: 12.5px;
+  text-align: left;
+}
+.mp-opt:first-of-type { border-top: 0; }
+/* slide switch: a slot with a knob, lamp on when set */
+.mp-switch {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--mp-lo);
+  border: 1px solid var(--mp-edge);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .6), 0 1px 0 var(--mp-hi);
+}
+.mp-switch::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 20px;
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--mp-hi), var(--mp-shell-b));
+  border: 1px solid var(--mp-edge);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 26%, transparent);
+  transition: transform .12s ease;
+}
+.mp-switch .mp-led { position: absolute; top: 6px; left: 30px; transition: left .12s ease; }
+.mp-opt[aria-checked="true"] .mp-switch::after { transform: translateX(20px); }
+.mp-opt[aria-checked="true"] .mp-switch .mp-led { left: 7px; }
+.mp-hint { margin-top: 8px; font-size: 11.5px; color: var(--mp-shell-dim); line-height: 1.7; }
+.mp-kbd {
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--mp-edge);
+  background: var(--mp-lcd-bg);
+  color: var(--mp-lcd-fg);
+  font-family: var(--mp-f-mono);
+  font-size: 10.5px;
+}
+
+/* --------------------------------------------------------------------------
+   5. The player (#mp-app): one set of parts, two arrangements
+        full     strip / deck across the top / library | browser | panels
+        compact  strip / deck / panels, stacked in a small window
+      "panels" are the visualizer, the lyrics and the queue; each can be
+      switched off (data-viz / data-lyr / data-pl on #mp-app, set by player.js)
+   -------------------------------------------------------------------------- */
+
+#mp-app {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483600;
+  overflow: hidden;
+  color: var(--mp-shell-text);
+  background: linear-gradient(180deg, var(--mp-shell-a), var(--mp-shell-b));
+  font-family: var(--mp-f-ui);
+  -webkit-user-select: none;
+  user-select: none;
+}
+html[data-mp-mode="compact"] #mp-app {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas: "strip" "deck" "side";
+}
+/* the column of panels is as wide as what is open in it */
+#mp-app { --mp-side-w: 304px; }
+#mp-app[data-viz="1"], #mp-app[data-lyr="1"] { --mp-side-w: clamp(330px, 36vw, 640px); }
+#mp-app[data-viz="0"][data-lyr="0"][data-pl="0"] { --mp-side-w: 0px; }
+html[data-mp-mode="full"] #mp-app {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr) var(--mp-side-w);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas: "strip strip strip" "deck deck deck" "nav browser side";
+}
+html[data-mp-mode="compact"] .only-full,
+html[data-mp-mode="full"] .only-compact { display: none !important; }
+
+/* ---- top strip ---- */
+.mpc-strip {
+  grid-area: strip;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--mp-edge);
+  box-shadow: inset 0 1px 0 var(--mp-hi);
+}
+.mpc-logo { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; border: 1px solid var(--mp-edge); }
+.mpc-brand { font-size: 10.5px; font-weight: 800; letter-spacing: .22em; white-space: nowrap; }
+.mpc-brand-jp { font: 10px/1 var(--mp-f-jp); letter-spacing: .08em; opacity: .75; white-space: nowrap; }
+.mpc-ibtn { width: 28px; height: 24px; border-radius: 6px; display: grid; place-items: center; flex: none; }
+.mpc-ibtn svg { width: 14px; height: 14px; }
+.mpc-ibtn[data-on="1"] { color: var(--mp-lit) !important; }
+.mpc-lib {
+  flex: none;
+  height: 24px;
+  padding: 0 11px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  white-space: nowrap;
+}
+.mpc-lib .mp-jp { font-weight: 400; letter-spacing: .06em; opacity: .75; }
+.mpc-lib svg { width: 12px; height: 12px; }
+
+/* search slot (full) */
+.mpa-search {
+  flex: 0 1 300px;
+  min-width: 120px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--mp-edge);
+  color: var(--mp-lcd-fg);
+  background: var(--mp-lcd-bg);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .6), 0 1px 0 var(--mp-hi);
+}
+.mpa-search svg { width: 13px; height: 13px; opacity: .8; }
+.mpa-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--mp-lcd-text);
+  font: 12px/1 var(--mp-f-mono);
+  -webkit-user-select: text;
+  user-select: text;
+}
+.mpa-search input::placeholder { color: var(--mp-lcd-dim); }
+.mpa-search input::-webkit-search-cancel-button { display: none; }
+.mpa-search:focus-within { box-shadow: inset 0 2px 5px rgba(0, 0, 0, .6), 0 0 0 1px var(--mp-lit); }
+
+/* ---- deck ---- */
+.mpc-deck {
+  grid-area: deck;
+  display: grid;
+  gap: 9px;
+  padding: 10px;
+  grid-template-columns: 176px minmax(0, 1fr);
+  grid-template-areas: "clock info" "seek seek" "ctl ctl";
+}
+html[data-mp-mode="full"] .mpc-deck {
+  grid-template-columns: 196px minmax(0, 1fr) 340px;
+  grid-template-areas: "clock info ctl" "seek seek seek";
+  border-bottom: 1px solid var(--mp-edge);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--mp-hi) 55%, transparent);
+}
+.mpc-lcd {
+  position: relative;
+  height: 88px;
+  overflow: hidden;
+  border-radius: 7px;
+  border: 1px solid var(--mp-edge);
+  color: var(--mp-lcd-fg);
+  background: var(--mp-lcd-bg);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, .65), 0 1px 0 var(--mp-hi);
+  font-family: var(--mp-f-mono);
+}
+/* faint scanlines */
+.mpc-lcd::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, transparent 0 2px, rgba(0, 0, 0, .16) 2px 3px);
+}
+
+.mpc-clock {
+  grid-area: clock;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  grid-template-rows: 42px minmax(0, 1fr);
+  column-gap: 6px;
+  padding: 6px 9px 7px;
+}
+.mpc-state { align-self: center; width: 14px; height: 14px; }
+.mpc-state svg { display: none; width: 14px; height: 14px; }
+#mp-app[data-state="play"] .mpc-state .s-play,
+#mp-app[data-state="load"] .mpc-state .s-play,
+#mp-app[data-state="pause"] .mpc-state .s-pause,
+#mp-app[data-state="stop"] .mpc-state .s-stop { display: block; }
+#mp-app[data-state="load"] .mpc-state,
+#mp-app[data-state="pause"] .mpc-time { animation: mp-blink 1.1s steps(2, jump-none) infinite; }
+@keyframes mp-blink { to { opacity: .35; } }
+
+.mpc-time {
+  align-self: center;
+  justify-self: end;
+  font: 700 34px/1 var(--mp-f-mono);
+  letter-spacing: .01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--mp-lcd-fg);
+  text-shadow: var(--mp-glow);
+}
+.mpc-viz { grid-column: 1 / -1; width: 100%; height: 100%; }
+
+.mpc-info {
+  grid-area: info;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 30px minmax(0, 1fr);
+  column-gap: 9px;
+  padding: 6px 9px 8px;
+}
+.mpc-marquee {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 30px;
+  text-shadow: var(--mp-glow);
+}
+/* soft edges only while the line scrolls (otherwise they just fade its first letters) */
+.mpc-marquee:has(> .mpc-marquee-in.scroll) {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+}
+.mpc-marquee-in { display: inline-block; white-space: pre; will-change: transform; }
+.mpc-marquee-in.scroll { animation: mp-marquee var(--mp-dur, 14s) linear infinite; }
+@keyframes mp-marquee { to { transform: translateX(-50%); } }
+
+.mpc-meta { align-self: end; min-width: 0; display: grid; gap: 5px; font-size: 11px; }
+.mpc-album { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--mp-lcd-soft); }
+.mpc-chips { display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; color: var(--mp-lcd-dim); }
+.mpc-chip {
+  flex: none;
+  padding: 1px 5px;
+  border: 1px solid var(--mp-lcd-dim);
+  border-radius: 3px;
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: .06em;
+}
+.mpc-chip:empty, .mpc-chip[hidden] { display: none; }
+/* "+ ADD" on the song display: a chip that is a key (add the playing song
+   to the library or to a playlist) */
+.mpc-chip-key { font-family: inherit; color: var(--mp-lcd-fg); border-color: var(--mp-lcd-fg); cursor: pointer; }
+.mpc-chip-key:hover { color: var(--mp-lcd-bg); background: var(--mp-lcd-fg); }
+/* the status chip: 再生中 / 一時停止 / 停止 */
+.mpc-chip-state { letter-spacing: .1em; }
+#mp-app[data-state="play"] .mpc-chip-state {
+  color: var(--mp-lcd-bg);
+  background: var(--mp-lcd-fg);
+  border-color: var(--mp-lcd-fg);
+}
+.mpc-art {
+  align-self: end;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--mp-lcd-faint);
+  border: 1px solid var(--mp-lcd-faint);
+}
+.mpc-art[data-empty="1"] { opacity: .55; }
+html[data-mp-mode="full"] .mpc-info { grid-template-rows: 32px minmax(0, 1fr); }
+html[data-mp-mode="full"] .mpc-marquee { grid-column: 1; font-size: 16px; line-height: 32px; }
+html[data-mp-mode="full"] .mpc-art { grid-row: 1 / -1; grid-column: 2; width: 72px; height: 72px; align-self: center; border-radius: 5px; }
+
+/* ---- sliders (seek + volume) ---- */
+.mp-slider {
+  --v: 0;
+  --thumb: 28px;
+  position: relative;
+  height: 18px;
+  cursor: pointer;
+  touch-action: none;
+  outline: none;
+}
+.mp-slider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 8px;
+  transform: translateY(-50%);
+  border-radius: 5px;
+  background: var(--mp-lo);
+  border: 1px solid var(--mp-edge);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .6), 0 1px 0 var(--mp-hi);
+}
+.mp-slider-fill {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  height: 4px;
+  width: calc(var(--v) * (100% - var(--thumb)) + var(--thumb) / 2);
+  transform: translateY(-50%);
+  border-radius: 3px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--mp-lit) 45%, transparent), var(--mp-lit));
+  pointer-events: none;
+}
+.mp-slider-thumb {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--v) * (100% - var(--thumb)));
+  width: var(--thumb);
+  height: 14px;
+  transform: translateY(-50%);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.mp-slider-thumb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--mp-lit);
+}
+.mp-slider:focus-visible .mp-slider-thumb { outline: 2px solid var(--mp-lit); outline-offset: 1px; }
+.mp-slider[data-disabled="1"] { opacity: .5; cursor: default; }
+
+.mpc-seek { grid-area: seek; }
+
+/* ---- transport ---- */
+.mpc-controls {
+  grid-area: ctl;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* shuffle, repeat and the three panel switches (VIS / LYR / PL): a line of
+   their own under the keys */
+.mpc-toggles { order: 3; flex: 0 0 100%; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.mpc-toggles .mp-grip { min-width: 4px; }
+.mpc-transport { display: flex; gap: 3px; }
+.mpc-transport .mp-key {
+  width: 40px;
+  height: 30px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+}
+#mp-app[data-state="play"] .mpc-transport [data-act="play"],
+#mp-app[data-state="load"] .mpc-transport [data-act="play"],
+#mp-app[data-state="pause"] .mpc-transport [data-act="pause"] { color: var(--mp-lit) !important; }
+
+.mpc-toggle {
+  flex: none;
+  height: 24px;
+  padding: 0 8px 0 7px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  white-space: nowrap;
+}
+.mpc-toggle[hidden] { display: none; }
+.mpc-vol {
+  flex: 1 1 90px;
+  min-width: 64px;
+  max-width: 150px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mpc-vol svg { opacity: .8; }
+.mpc-vol .mp-slider { flex: 1; --thumb: 16px; }
+/* full: three lines - keys, switches, volume */
+html[data-mp-mode="full"] .mpc-controls { align-content: space-between; height: 88px; gap: 0 8px; }
+html[data-mp-mode="full"] .mpc-transport { flex: 0 0 100%; gap: 4px; }
+html[data-mp-mode="full"] .mpc-transport .mp-key { flex: 1; width: auto; height: 36px; border-radius: 7px; }
+html[data-mp-mode="full"] .mpc-transport svg { width: 18px; height: 18px; }
+html[data-mp-mode="full"] .mpc-toggles { order: 0; justify-content: space-between; gap: 4px; }
+html[data-mp-mode="full"] .mpc-toggles .mp-grip { display: none; }
+html[data-mp-mode="full"] .mpc-controls .mpc-toggle { height: 22px; padding: 0 7px 0 6px; gap: 5px; }
+html[data-mp-mode="full"] .mpc-vol { flex: 0 0 100%; max-width: none; margin: 0; }
+
+/* ---- library panel (full) ---- */
+.mpa-nav {
+  grid-area: nav;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 8px 10px 10px;
+  background: var(--mp-shippo);
+}
+.mpa-nav-sec {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .22em;
+  white-space: nowrap;
+}
+.mpa-nav-sec .mp-jp { font-weight: 400; letter-spacing: .08em; opacity: .75; }
+.mpa-nav-list { flex: none; display: grid; gap: 2px; }
+.mpa-nav-pls {
+  flex: 1 1 auto;
+  min-height: 40px;
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  margin-right: -4px;
+  padding-right: 4px;
+}
+.mpa-nav-pls::-webkit-scrollbar-thumb { background-color: var(--mp-shell-dim) !important; }
+/* playlists can be dragged into any order (player.js: onPlDown...) */
+.mpa-nav-pls { position: relative; }
+.mpa-nav-pls[data-dragging="1"],
+.mpa-nav-pls[data-dragging="1"] .mpa-nav-item { cursor: grabbing; }
+.mpa-nav-item[data-drag="1"] { opacity: .45; }
+.mpa-drop {                         /* the lit line where the dragged playlist will land */
+  position: absolute;
+  z-index: 2;
+  border-radius: 1px;
+  background: var(--mp-lit);
+  box-shadow: 0 0 6px var(--mp-lit);
+  pointer-events: none;
+}
+.mpa-pl-reset {                     /* back to Apple Music's order (only shown once reordered) */
+  flex: none;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid var(--mp-shell-dim);
+  font: 800 8.5px/1 var(--mp-f-ui);
+  letter-spacing: .12em;
+  opacity: .8;
+}
+.mpa-pl-reset:hover { opacity: 1; color: var(--mp-lit); border-color: var(--mp-lit); }
+.mpa-pl-reset[hidden] { display: none; }
+.mpa-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 7px;
+  font-size: 13px;
+  text-align: left;
+  color: var(--mp-shell-text);
+}
+.mpa-nav-item svg { width: 15px; height: 15px; color: var(--mp-lit); }
+.mpa-nav-item .nm { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpa-nav-item .mp-jp { flex: none; font-size: 10.5px; letter-spacing: .06em; opacity: .58; }
+.mpa-nav-item:hover {
+  background: linear-gradient(180deg, var(--mp-hi), var(--mp-shell-b));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 22%, transparent), 0 1px 2px rgba(0, 0, 0, .35);
+}
+.mpa-nav-item[aria-current="true"],
+.mpa-nav-item[aria-current="true"]:hover {
+  color: var(--mp-lcd-fg);
+  background: var(--mp-lcd-bg);
+  box-shadow: inset 0 0 0 1px var(--mp-edge), inset 0 2px 5px rgba(0, 0, 0, .65), 0 1px 0 var(--mp-hi);
+  font-weight: 600;
+}
+.mpa-nav-item[aria-current="true"] svg { color: var(--mp-lcd-fg); }
+.mpa-nav-foot { flex: none; display: flex; gap: 8px; padding-top: 10px; container-type: inline-size; }
+
+/* ---- browser (full): one big display ---- */
+.mpa-browser {
+  grid-area: browser;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  margin: 8px 8px 10px 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 9px;
+  border: 1px solid var(--mp-edge);
+  color: var(--mp-lcd-text);
+  background: var(--mp-lcd-bg);
+  box-shadow: inset 0 3px 10px rgba(0, 0, 0, .6), 0 1px 0 var(--mp-hi);
+  container-type: inline-size;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.mpb-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mp-lcd-line);
+}
+.mpb-back { flex: none; width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; }
+.mpb-back[hidden] { display: none; }
+.mpb-art {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 5px;
+  object-fit: cover;
+  background: var(--mp-lcd-faint);
+  border: 1px solid var(--mp-lcd-line);
+}
+.mpb-art[hidden] { display: none; }
+.mpb-titles { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.mpb-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  font: 700 20px/1.15 var(--mp-f-mono);
+  color: var(--mp-lcd-fg);
+  text-shadow: var(--mp-glow);
+}
+.mpb-title .tx { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpb-title .mp-jp { flex: none; font-size: 12px; font-weight: 400; letter-spacing: .1em; color: var(--mp-lcd-dim); text-shadow: none; }
+.mpb-meta { font-size: 11.5px; line-height: 1.2; color: var(--mp-lcd-soft); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpb-actions { flex: none; display: flex; gap: 6px; }
+.mpb-actions .mpc-lib { height: 30px; padding: 0 12px; border-radius: 7px; }
+.mpb-actions .mpc-lib[hidden] { display: none; }
+/* the ADD key once the album or playlist is in the library: a lit lamp, not a dead key */
+.mpb-actions .mpc-lib[data-done="1"] { opacity: 1; color: var(--mp-lit) !important; }
+
+/* column header of the track table */
+.mpb-cols { display: none; height: 24px; padding-right: 12px; border-bottom: 1px solid var(--mp-lcd-line); color: var(--mp-lcd-dim); font: 10px/24px var(--mp-f-mono); letter-spacing: .12em; }
+.mpa-browser[data-kind="table"] .mpb-cols { display: grid; }
+
+.mpb-cols, .mpr {
+  grid-template-columns: 46px minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 54px;
+  column-gap: 10px;
+  align-items: center;
+}
+.mpb-cols .d, .mpr .d { text-align: right; padding-right: 10px; }
+.mpb-cols .n { text-align: center; }
+/* an album's own page: no album column */
+.mpa-browser[data-numbered="1"] .mpb-cols,
+.mpa-browser[data-numbered="1"] .mpr { grid-template-columns: 46px minmax(0, 1.6fr) minmax(0, 1fr) 54px; }
+.mpa-browser[data-numbered="1"] .mpb-cols .al,
+.mpa-browser[data-numbered="1"] .mpr .al { display: none; }
+@container (max-width: 700px) {
+  .mpb-cols, .mpr { grid-template-columns: 46px minmax(0, 1.4fr) minmax(0, 1fr) 54px; }
+  .mpb-cols .al, .mpr .al { display: none; }
+}
+@container (max-width: 470px) {
+  .mpb-cols, .mpr { grid-template-columns: 46px minmax(0, 1fr) 54px; }
+  .mpb-cols .a, .mpr .a { display: none; }
+  .mpb-actions .mp-jp { display: none; }
+}
+
+.mpb-body { position: relative; min-height: 0; overflow-y: auto; overflow-x: hidden; outline: none; }
+.mpv-space { position: relative; contain: layout style; }
+.mpr {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 34px;
+  display: grid;
+  font-size: 13px;
+  color: var(--mp-lcd-soft);
+  cursor: default;
+  contain: layout style;
+}
+.mpr:hover { background: var(--mp-lcd-faint); }
+.mpr .n { position: relative; display: grid; place-items: center; height: 34px; font: 11px/1 var(--mp-f-mono); color: var(--mp-lcd-dim); }
+.mpr-art { width: 26px; height: 26px; border-radius: 3px; object-fit: cover; background: var(--mp-lcd-faint); }
+.mpr-art:not([src]) { visibility: hidden; }
+.mpr[data-num="1"] .mpr-art { display: none; }
+.mpr:not([data-num="1"]) .mpr-num { display: none; }
+.mpr .t { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--mp-lcd-text); }
+.mpr .a, .mpr .al { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpr .d { font: 11.5px/1 var(--mp-f-mono); font-variant-numeric: tabular-nums; color: var(--mp-lcd-dim); }
+.mpr[data-sel="1"] { background: color-mix(in srgb, var(--mp-lcd-fg) 20%, var(--mp-lcd-bg)); }
+.mpr[data-cur="1"] .t { color: #fff; font-weight: 700; text-shadow: var(--mp-glow); }
+.mpr[data-cur="1"] .n { color: var(--mp-lcd-fg); }
+/* the playing song is marked as a whole row: a lit bar on its left edge */
+.mpr[data-cur="1"], .mpc-row[data-cur="1"] { background: var(--mp-panel); box-shadow: inset 3px 0 0 var(--mp-lcd-fg); }
+.mpr[data-cur="1"]:hover, .mpc-row[data-cur="1"]:hover { background: var(--mp-lcd-faint); }
+.mpr[data-cur="1"][data-sel="1"], .mpc-row[data-cur="1"][data-sel="1"] { background: color-mix(in srgb, var(--mp-lcd-fg) 20%, var(--mp-lcd-bg)); }
+/* title, then artist, then album: three steps of ink */
+.mpr .al { color: var(--mp-lcd-dim); }
+.mpr[data-empty="1"] { color: var(--mp-lcd-dim); }
+.mpr[data-empty="1"] .t { color: var(--mp-lcd-dim); }
+/* keys on a row, shown while the pointer is on it or it is selected:
+   + (add to the library, only on Apple's songs that are not in it) and ... (menu) */
+.mpr .x {
+  position: absolute;
+  right: 4px;
+  top: 0;
+  height: 34px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding-left: 22px;
+  background: linear-gradient(90deg, transparent, var(--mp-lcd-faint) 18px);
+}
+.mpr:hover .x, .mpr[data-sel="1"] .x { display: flex; }
+.mpr[data-sel="1"] .x { background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--mp-lcd-fg) 20%, var(--mp-lcd-bg)) 18px); }
+.mpr[data-empty="1"] .x { display: none; }
+.mpr-key {
+  width: 26px;
+  height: 24px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  color: var(--mp-lcd-fg);
+  border: 1px solid var(--mp-lcd-dim);
+  background: var(--mp-lcd-bg);
+}
+.mpr-key:hover { color: var(--mp-lcd-bg); background: var(--mp-lcd-fg); border-color: var(--mp-lcd-fg); }
+.mpr-key svg { width: 13px; height: 13px; }
+.mpr [data-row="add"] { display: none; }
+.mpr[data-lib="0"] [data-row="add"] { display: grid; }
+/* a small lamp on Apple's songs that are in the library already */
+.mpr[data-lib="1"] .n::after,
+.mpr[data-lib="adding"] .n::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mp-lcd-fg);
+  box-shadow: 0 0 0 1.5px var(--mp-lcd-bg), 0 0 6px var(--mp-lcd-fg);
+}
+.mpr[data-lib="adding"] .n::after { animation: mp-blink .5s steps(2, jump-none) infinite; }
+/* artist list rows reuse .mpr with a single wide column */
+.mpr[data-kind="artist"] { grid-template-columns: 46px minmax(0, 1fr) 30px; }
+.mpr[data-kind="artist"] .t { font-size: 13.5px; }
+.mpr[data-kind="artist"] svg { width: 14px; height: 14px; color: var(--mp-lcd-dim); }
+
+/* tiles (albums, recently added) */
+.mpg {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: 16px 14px;
+  padding: 14px;
+}
+.mpg-tile {
+  display: grid;
+  gap: 7px;
+  align-content: start;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+  color: var(--mp-lcd-text);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 190px;
+}
+.mpg-tile img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--mp-lcd-faint);
+  border: 1px solid var(--mp-lcd-line);
+}
+.mpg-tile:hover img { border-color: var(--mp-lcd-fg); }
+.mpg-tile:focus-visible { outline: 2px solid var(--mp-lcd-fg) !important; outline-offset: 3px; border-radius: 6px; }
+.mpg-tile .nm { font-size: 12.5px; line-height: 1.25; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpg-tile .sb { font-size: 11.5px; line-height: 1.2; color: var(--mp-lcd-dim); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpg-tile .sb .mp-jp { font-size: 10.5px; }
+
+/* section title inside a scrolling view (search results) */
+.mpb-sec {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 14px 6px;
+  font: 700 12px/1 var(--mp-f-mono);
+  letter-spacing: .14em;
+  color: var(--mp-lcd-fg);
+}
+.mpb-sec .mp-jp { font-weight: 400; letter-spacing: .08em; color: var(--mp-lcd-dim); }
+/* rows inside search results are ordinary flow rows, not virtual ones */
+.mpb-flow .mpr { position: relative; }
+
+.mpb-msg {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  height: 100%;
+  min-height: 160px;
+  padding: 24px;
+  text-align: center;
+  font: 13px/1.7 var(--mp-f-mono);
+  color: var(--mp-lcd-dim);
+}
+.mpb-msg .big { font-size: 15px; color: var(--mp-lcd-fg); text-shadow: var(--mp-glow); }
+.mpb-msg .mpc-lib { height: 32px; padding: 0 14px; border-radius: 7px; }
+
+/* kanji watermark in the corner of the browser */
+.mpb-kanji {
+  position: absolute;
+  right: 70px;                /* clear of the track-length column */
+  bottom: 14px;
+  writing-mode: vertical-rl;
+  font: 700 84px/1 var(--mp-f-mincho);
+  letter-spacing: .06em;
+  color: var(--mp-lcd-fg);
+  opacity: .04;
+  pointer-events: none;
+}
+
+/* one-line notice at the bottom of the browser (errors, hints) */
+.mpb-toast {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--mp-lcd-fg);
+  color: var(--mp-lcd-text);
+  background: var(--mp-panel);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .6);
+  font: 12px/1.4 var(--mp-f-mono);
+}
+.mpb-toast[data-show="1"] { display: flex; }
+.mpb-toast::before { content: "!"; flex: none; font-weight: 700; color: var(--mp-lcd-fg); }
+.mpb-toast[data-kind="ok"] { border-color: var(--mp-lcd-dim); }
+.mpb-toast[data-kind="ok"]::before { content: "\266A"; }          /* a note: good news */
+
+/* ---- the song menu (right-click a song, its ... key, or + ADD on the deck) ---- */
+#mp-menu {
+  position: fixed;
+  z-index: 2147483620;
+  display: none;
+  width: 248px;
+  max-height: min(440px, calc(100vh - 16px));
+  flex-direction: column;
+  padding: 5px;
+  border-radius: 8px;
+  border: 1px solid var(--mp-edge);
+  color: var(--mp-lcd-text);
+  background: var(--mp-lcd-bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mp-lcd-fg) 22%, transparent), 0 12px 30px rgba(0, 0, 0, .65);
+  font: 12.5px/1.2 var(--mp-f-ui);
+  -webkit-user-select: none;
+  user-select: none;
+}
+#mp-menu[data-open="1"] { display: flex; }
+.mpm-head { display: grid; gap: 3px; padding: 6px 8px 8px; border-bottom: 1px solid var(--mp-lcd-line); margin-bottom: 4px; }
+.mpm-title { font: 700 12.5px/1.25 var(--mp-f-mono); color: var(--mp-lcd-fg); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpm-sub { font-size: 11px; color: var(--mp-lcd-dim); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpm-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 30px;
+  padding: 0 8px;
+  border-radius: 5px;
+  text-align: left;
+  color: var(--mp-lcd-text);
+}
+.mpm-item svg, .mpm-item > i { flex: none; width: 14px; height: 14px; color: var(--mp-lcd-fg); }
+.mpm-en { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpm-item .mp-jp { flex: none; font-size: 10px; color: var(--mp-lcd-dim); }
+.mpm-item:hover:not(:disabled), .mpm-item:focus-visible { background: color-mix(in srgb, var(--mp-lcd-fg) 18%, var(--mp-lcd-bg)); color: #fff; }
+.mpm-item:disabled { cursor: default; color: var(--mp-lcd-soft); }
+.mpm-item:disabled svg { color: var(--mp-lit); }
+.mpm-sep { height: 1px; margin: 4px 6px; background: var(--mp-lcd-line); }
+.mpm-scroll { min-height: 0; overflow-y: auto; }
+.mpm-note { padding: 8px; font-size: 11.5px; line-height: 1.5; color: var(--mp-lcd-dim); }
+.mpm-new { display: flex; gap: 6px; padding: 4px 4px 2px; }
+.mpm-input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 5px;
+  border: 1px solid var(--mp-lcd-dim);
+  outline: 0;
+  color: var(--mp-lcd-text);
+  background: color-mix(in srgb, var(--mp-lcd-fg) 7%, var(--mp-lcd-bg));
+  font: 12px/1 var(--mp-f-ui);
+  -webkit-user-select: text;
+  user-select: text;
+}
+.mpm-input:focus { border-color: var(--mp-lcd-fg); }
+.mpm-input::placeholder { color: var(--mp-lcd-dim); }
+.mpm-make { flex: none; height: 28px; padding: 0 10px; border-radius: 5px; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+
+/* ---- the column of panels: visualizer, lyrics, queue ----
+   Each is switched with its key on the deck (VIS / LYR / PL). */
+.mpa-side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+  padding: 4px 10px 10px 0;
+  container-type: inline-size;
+}
+html[data-mp-mode="compact"] .mpa-side { padding: 0 10px 10px; }
+#mp-app[data-viz="0"] .mpp-viz,
+#mp-app[data-lyr="0"] .mpp-lyr,
+#mp-app[data-pl="0"] .mpc-pl,
+#mp-app[data-viz="0"][data-lyr="0"][data-pl="0"] .mpa-side { display: none; }
+
+/* a panel: a strip with its name and keys, then its display */
+.mpp { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; container-type: inline-size; }
+.mpp-viz { flex: 1.3 1 0; }
+.mpp-lyr { flex: 1.15 1 0; }
+.mpc-pl { flex: 1 1 0; }
+/* compact: each panel has a height of its own (CP_* in player.js) and they
+   share out whatever the window gives */
+html[data-mp-mode="compact"] .mpp-viz { flex: 1 1 230px; }
+html[data-mp-mode="compact"] .mpp-lyr { flex: 1 1 210px; }
+html[data-mp-mode="compact"] .mpc-pl { flex: 1 1 250px; }
+
+.mpp-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .22em;
+  white-space: nowrap;
+}
+.mpp-head .mp-jp { font-weight: 400; letter-spacing: .08em; opacity: .75; }
+.mpp-head .mpc-ibtn { width: 26px; height: 22px; }
+.mpp-head .mpc-ibtn svg { width: 12px; height: 12px; }
+.mpp-head .mpc-toggle { height: 22px; padding: 0 7px 0 6px; gap: 5px; }
+/* LIVE / DEMO on the visualizer */
+.mpp-chip {
+  padding: 1px 5px;
+  border: 1px solid var(--mp-shell-dim);
+  border-radius: 3px;
+  font: 700 8.5px/12px var(--mp-f-mono);
+  letter-spacing: .1em;
+  opacity: .8;
+}
+.mpp-chip:empty { display: none; }
+.mpp-chip[data-s="live"] { color: var(--mp-lit); border-color: var(--mp-lit); opacity: 1; }
+/* a narrow panel sheds the extras on its strip */
+@container (max-width: 420px) {
+  .mpp-head { letter-spacing: .14em; gap: 4px; }
+  .mpp-head .mp-jp, .mpp-head .mpp-chip { display: none; }
+}
+@container (max-width: 320px) {
+  .mpp-head [data-act="vizprev"], .mpp-head [data-act="viznext"] { display: none; }
+}
+.mpp-screen {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 7px;
+  border: 1px solid var(--mp-edge);
+  background: var(--mp-lcd-bg);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, .65), 0 1px 0 var(--mp-hi);
+}
+
+/* ---- visualizer ---- */
+.mpv-screen { background: #000; }
+.mpv-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* name of the effect (or, in the big view, of the song), shown for a moment */
+.mpv-osd {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #fff;
+  font: 700 12px/1.3 var(--mp-f-mono);
+  letter-spacing: .14em;
+  text-shadow: 0 0 6px #000, 0 1px 2px #000;
+  opacity: 0;
+  transition: opacity .7s ease;
+  pointer-events: none;
+}
+.mpv-osd[data-show="1"] { opacity: .95; transition-duration: .12s; }
+.mpv-osd .mp-jp { flex: none; font-size: 15px; letter-spacing: .1em; }
+.mpv-osd span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* list of effects */
+.mpv-menu {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
+  gap: 6px;
+  align-content: start;
+  background: rgba(0, 0, 0, .8);
+}
+.mpv-menu[hidden] { display: none; }
+.mpv-item {
+  display: grid;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--mp-lcd-fg) 28%, transparent);
+  color: var(--mp-lcd-text);
+  background: color-mix(in srgb, var(--mp-lcd-bg) 82%, transparent);
+  font: 11px/1.1 var(--mp-f-mono);
+  letter-spacing: .05em;
+}
+.mpv-item .mp-jp { font-size: 14px; color: var(--mp-lcd-fg); }
+.mpv-item:hover { border-color: var(--mp-lcd-fg); }
+.mpv-item[aria-pressed="true"] {
+  border-color: var(--mp-lcd-fg);
+  color: #fff;
+  background: color-mix(in srgb, var(--mp-lcd-fg) 24%, var(--mp-lcd-bg));
+}
+/* an effect this computer cannot run (the reason is in its tooltip) */
+.mpv-item[data-bad="1"] { opacity: .4; text-decoration: line-through; }
+/* the graphics in use, under the list of effects */
+.mpv-info {
+  grid-column: 1 / -1;
+  padding: 4px 2px 0;
+  font: 10.5px/1.45 var(--mp-f-mono);
+  color: var(--mp-lcd-dim);
+  overflow-wrap: anywhere;
+  -webkit-user-select: text;
+  user-select: text;
+}
+/* on the picture when only the plain bars can be drawn: why, and a key to try again */
+.mpv-note {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--mp-lcd-dim);
+  color: var(--mp-lcd-text);
+  background: rgba(0, 0, 0, .78);
+  font: 11px/1.45 var(--mp-f-mono);
+  -webkit-user-select: text;
+  user-select: text;
+}
+.mpv-note[hidden] { display: none; }
+.mpv-note span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.mpv-retry { flex: none; height: 24px; padding: 0 9px; border-radius: 5px; font: 800 9.5px/1 var(--mp-f-ui); letter-spacing: .12em; }
+/* the line being sung, over the big view */
+.mpv-lyric {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 9%;
+  display: none;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 0 14px rgba(0, 0, 0, .9), 0 2px 4px #000;
+  pointer-events: none;
+}
+#mp-app[data-vizbig="1"] .mpv-lyric[data-show="1"] { display: block; }
+.mpv-lyric-t { font-size: clamp(20px, 3.4vw, 46px); font-weight: 700; line-height: 1.25; }
+.mpv-lyric-s { margin-top: 6px; font-size: clamp(13px, 1.5vw, 21px); font-weight: 500; line-height: 1.3; opacity: .85; }
+
+/* the visualizer filling the whole window (F, double-click, or its key) */
+#mp-app[data-vizbig="1"] .mpp-viz { position: fixed; inset: 0; z-index: 40; display: block; background: #000; }
+#mp-app[data-vizbig="1"] .mpp-viz .mpp-screen { position: absolute; inset: 0; border: 0; border-radius: 0; box-shadow: none; }
+#mp-app[data-vizbig="1"] .mpp-viz .mpp-head {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 36px;
+  padding: 0 10px;
+  color: var(--mp-shell-text);
+  background: linear-gradient(180deg, var(--mp-shell-a), var(--mp-shell-b));
+  border-bottom: 1px solid var(--mp-edge);
+  transition: transform .25s ease, opacity .25s ease;
+}
+/* its keys slide away while the mouse rests */
+#mp-app[data-vizbig="1"] .mpp-viz[data-idle="1"] .mpp-head { opacity: 0; transform: translateY(-100%); pointer-events: none; }
+#mp-app[data-vizbig="1"] .mpp-viz[data-idle="1"] { cursor: none; }
+
+/* ---- lyrics ---- */
+.mpl-screen { container-type: size; color: var(--mp-lcd-text); }
+.mpl-body {
+  position: absolute;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 34cqh 16px 46cqh;      /* room for the first and last line to sit where the sung line sits */
+  outline: none;
+}
+.mpl-line {
+  padding: 7px 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.32;
+  color: var(--mp-lcd-fg);
+  opacity: .36;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: opacity .25s ease;
+}
+.mpl-line:hover { opacity: .7; }
+/* the line being sung */
+.mpl-line[data-on="1"] {
+  opacity: 1;
+  color: #fff;
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--mp-lcd-fg) 60%, transparent));
+}
+.mpl-line[data-side="r"] { text-align: right; }
+/* word by word: each word fills with light as it is sung (--p runs 0..1) */
+.mpl-line[data-on="1"] .w {
+  color: transparent;
+  background: linear-gradient(90deg, #fff calc(var(--p, 0) * 100%), color-mix(in srgb, var(--mp-lcd-fg) 52%, var(--mp-lcd-bg)) calc(var(--p, 0) * 100%));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.mpl-line .w.bg { font-size: .86em; font-weight: 500; }
+/* romanised reading and translation under a line */
+.mpl-ro { margin-top: 3px; font-size: 12px; font-weight: 500; line-height: 1.3; letter-spacing: .01em; opacity: .9; }
+.mpl-tr { margin-top: 2px; font-size: 12.5px; font-weight: 400; line-height: 1.3; opacity: .8; }
+.mpp-lyr[data-roma="0"] .mpl-ro,
+.mpp-lyr[data-trans="0"] .mpl-tr { display: none; }
+/* three dots where nobody sings */
+.mpl-line[data-gap="1"] { cursor: default; }
+.mpl-line[data-gap="1"] .mpl-t { display: flex; gap: 8px; padding: 6px 0; }
+.mpl-line[data-gap="1"] i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.mpl-line[data-gap="1"][data-on="1"] i { animation: mp-dots 1.4s ease-in-out infinite; }
+.mpl-line[data-gap="1"][data-on="1"] i:nth-child(2) { animation-delay: .2s; }
+.mpl-line[data-gap="1"][data-on="1"] i:nth-child(3) { animation-delay: .4s; }
+@keyframes mp-dots { 0%, 100% { opacity: .3; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.15); } }
+/* lyrics without timing: plain text to read */
+.mpp-lyr[data-synced="0"] .mpl-body { padding: 16px; }
+.mpp-lyr[data-synced="0"] .mpl-line { padding: 4px 0; font-size: 15px; font-weight: 600; opacity: .92; cursor: default; }
+.mpl-credit { margin-top: 26px; font: 11px/1.5 var(--mp-f-mono); color: var(--mp-lcd-dim); }
+.mpl-msg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 16px;
+  text-align: center;
+  font: 12.5px/1.6 var(--mp-f-mono);
+  color: var(--mp-lcd-dim);
+}
+.mpl-msg .big { font-size: 14px; letter-spacing: .08em; color: var(--mp-lcd-fg); text-shadow: var(--mp-glow); }
+.mpl-msg .mpc-lib { height: 30px; padding: 0 14px; border-radius: 7px; }
+.mpl-kanji {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font: 700 56px/1 var(--mp-f-mincho);
+  font-size: min(56px, 26cqh);
+  letter-spacing: .06em;
+  color: var(--mp-lcd-fg);
+  opacity: .05;
+  pointer-events: none;
+}
+
+/* ---- queue ---- */
+.mpc-pl { grid-template-rows: auto minmax(0, 1fr) auto; container-type: size; }
+.mpc-pl-count { letter-spacing: .08em; opacity: .75; font-weight: 600; }
+.mpc-pl-list {
+  grid-row: 2;
+  grid-column: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 0;
+  border-radius: 7px;
+  border: 1px solid var(--mp-edge);
+  color: var(--mp-lcd-soft);
+  background: var(--mp-lcd-bg);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, .65), 0 1px 0 var(--mp-hi);
+  font: 12.5px/1 var(--mp-f-mono);
+}
+/* kanji watermark sitting on the queue display */
+.mpc-pl-kanji {
+  grid-row: 2;
+  grid-column: 1;
+  align-self: end;
+  justify-self: end;
+  margin: 0 70px 12px 0;      /* clear of the track-length column */
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font: 700 64px/1 var(--mp-f-mincho);
+  font-size: min(64px, 24cqh);          /* smaller when the queue panel is short */
+  letter-spacing: .06em;
+  color: var(--mp-lcd-fg);
+  opacity: .075;
+  pointer-events: none;
+}
+.mpc-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 10px 0 2px;
+  cursor: default;
+}
+.mpc-row:hover { background: var(--mp-lcd-faint); }
+.mpc-row .n { text-align: right; opacity: .6; }
+.mpc-row .t { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mpc-row .d { opacity: .7; font-variant-numeric: tabular-nums; }
+.mpc-row[data-sel="1"] { background: color-mix(in srgb, var(--mp-lcd-fg) 20%, var(--mp-lcd-bg)); }
+.mpc-row[data-cur="1"] { color: #fff; text-shadow: var(--mp-glow); font-weight: 700; }
+.mpc-row[data-cur="1"] .n { opacity: 1; }
+.mpc-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 90px;
+  padding: 16px;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--mp-lcd-dim);
+}
+.mpc-pl-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 9px;
+  min-height: 33px;
+  font: 11px/1 var(--mp-f-mono);
+}
+.mpc-pl-total { opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mpc-pl-foot .mpc-lib { font-family: var(--mp-f-ui); }
+
+/* ---- full layout in smaller windows ----
+   Every switch keeps working at every size: panels get narrower or move,
+   nothing is taken away. */
+html[data-mp-mode] .only-narrow { display: none; }
+/* tighter: a narrower library panel and a narrower column of panels */
+@media (max-width: 1099px) {
+  html[data-mp-mode="full"] #mp-app {
+    --mp-side-w: 280px;
+    grid-template-columns: 212px minmax(0, 1fr) var(--mp-side-w);
+  }
+  html[data-mp-mode="full"] #mp-app[data-viz="1"],
+  html[data-mp-mode="full"] #mp-app[data-lyr="1"] { --mp-side-w: clamp(280px, 31vw, 350px); }
+  html[data-mp-mode="full"] #mp-app[data-viz="0"][data-lyr="0"][data-pl="0"] { --mp-side-w: 0px; }
+  html[data-mp-mode="full"] .mpc-deck { grid-template-columns: 180px minmax(0, 1fr) 324px; }
+}
+/* narrow: deck stacks like the compact one, library becomes a strip of tabs,
+   the panels that are switched on sit side by side under the browser */
+@media (max-width: 859px) {
+  html[data-mp-mode="full"] #mp-app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "strip" "deck" "nav" "browser" "side";
+  }
+  html[data-mp-mode="full"] .mpa-side { flex-direction: row; height: 31vh; min-height: 170px; padding: 0 10px 10px; }
+  html[data-mp-mode="full"] .mpp-viz, html[data-mp-mode="full"] .mpp-lyr, html[data-mp-mode="full"] .mpc-pl { flex: 1 1 0; }
+  html[data-mp-mode="full"] .only-narrow { display: grid; }
+  html[data-mp-mode="full"] .mpc-deck {
+    grid-template-columns: 176px minmax(0, 1fr);
+    grid-template-areas: "clock info" "seek seek" "ctl ctl";
+  }
+  html[data-mp-mode="full"] .mpc-controls { height: auto; gap: 8px; align-content: normal; }
+  html[data-mp-mode="full"] .mpc-transport { flex: none; gap: 3px; }
+  html[data-mp-mode="full"] .mpc-transport .mp-key { flex: none; width: 40px; height: 30px; }
+  html[data-mp-mode="full"] .mpc-transport svg { width: 16px; height: 16px; }
+  html[data-mp-mode="full"] .mpc-toggles { order: 3; justify-content: flex-start; gap: 6px; }
+  html[data-mp-mode="full"] .mpc-toggles .mp-grip { display: block; }
+  html[data-mp-mode="full"] .mpc-controls .mpc-toggle { height: 24px; padding: 0 8px 0 7px; gap: 6px; }
+  html[data-mp-mode="full"] .mpc-vol { flex: 1 1 90px; max-width: 150px; margin-left: auto; }
+  html[data-mp-mode="full"] .mpc-info { grid-template-rows: 30px minmax(0, 1fr); }
+  html[data-mp-mode="full"] .mpc-marquee { grid-column: 1 / -1; font-size: 15px; line-height: 30px; }
+  html[data-mp-mode="full"] .mpc-art { grid-row: auto; grid-column: auto; width: 40px; height: 40px; align-self: end; }
+
+  html[data-mp-mode="full"] .mpa-nav { flex-direction: row; align-items: center; gap: 6px; padding: 0 10px 8px; overflow-x: auto; background: none; }
+  html[data-mp-mode="full"] .mpa-nav::-webkit-scrollbar { height: 0; }
+  html[data-mp-mode="full"] .mpa-nav-sec, html[data-mp-mode="full"] .mpa-nav-foot { display: none; }
+  html[data-mp-mode="full"] .mpa-nav-list, html[data-mp-mode="full"] .mpa-nav-pls { display: flex; flex: none; gap: 4px; overflow: visible; margin: 0; padding: 0; }
+  html[data-mp-mode="full"] .mpa-nav-item { width: auto; flex: none; max-width: 200px; }
+  html[data-mp-mode="full"] .mpa-nav-item .mp-jp { display: none; }
+  html[data-mp-mode="full"] .mpa-browser { margin: 0 10px 10px; }
+  html[data-mp-mode="full"] .mpc-brand-jp { display: none; }
+}
+@media (max-width: 599px) {
+  html[data-mp-mode="full"] .mpc-brand { display: none; }
+  html[data-mp-mode="full"] .mpa-search { flex: 1 1 auto; }
+}
+
+/* ==========================================================================
+   Stream Player
+   ========================================================================== */
+html[data-mp-theme] {
+  --sp-spotify: #1ed760;
+  --sp-soundcloud: #ff7a1f;
+}
+html, body { background: var(--mp-shell-b, #141a27); }
+
+/* ---- the switch between the services (top strip) ---- */
+.mpc-svc {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 6px;
+  font: 800 9.5px/1 var(--mp-f-ui);
+  letter-spacing: .14em;
+  cursor: pointer;
+}
+.mpc-svc-name { display: inline-flex; align-items: center; gap: 5px; opacity: .5; transition: opacity .15s ease, color .15s ease; }
+.mpc-svc .mpc-svc-name .mp-led { background: var(--mp-lo); box-shadow: inset 0 1px 1px rgba(0, 0, 0, .6); }
+.mpc-svc[data-svc="spotify"] .mpc-svc-a,
+.mpc-svc[data-svc="soundcloud"] .mpc-svc-b { opacity: 1; }
+.mpc-svc[data-svc="spotify"] .mpc-svc-a .mp-led { background: var(--sp-spotify); box-shadow: 0 0 6px var(--sp-spotify); }
+.mpc-svc[data-svc="soundcloud"] .mpc-svc-b .mp-led { background: var(--sp-soundcloud); box-shadow: 0 0 6px var(--sp-soundcloud); }
+.mpc-svc-track {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 14px;
+  border-radius: 7px;
+  border: 1px solid var(--mp-edge);
+  background: var(--mp-lcd-bg);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .75), 0 1px 0 var(--mp-hi);
+}
+.mpc-svc-knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 14px;
+  height: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--mp-edge);
+  background: linear-gradient(180deg, color-mix(in srgb, #fff 30%, var(--mp-shell-a)), var(--mp-shell-b));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+  transition: left .2s cubic-bezier(.3, 1.4, .6, 1);
+}
+.mpc-svc[data-svc="soundcloud"] .mpc-svc-knob { left: 15px; }
+.mpc-svc-knob::after {
+  content: "";
+  position: absolute;
+  inset: 3px 6px;
+  border-radius: 1px;
+  background: repeating-linear-gradient(90deg, var(--mp-lo) 0 1px, transparent 1px 2px);
+}
+/* the compact player's strip is narrow: the brand gives way to the switch */
+html[data-mp-mode="compact"] .mpc-brand-jp { display: none; }
+html[data-mp-mode="compact"] .mpc-svc { padding: 0 7px; gap: 5px; letter-spacing: .1em; }
+@media (max-width: 560px) {
+  html[data-mp-mode="compact"] .mpc-brand { display: none; }
+}
+@media (max-width: 899px) {
+  html[data-mp-mode="full"] .mpc-svc { letter-spacing: .08em; padding: 0 7px; }
+}
+
+/* ---- signing in, and setting a service up ---- */
+.mpb-acct { align-content: start; justify-items: center; height: auto; max-width: 680px; margin: 0 auto; padding-top: 30px; }
+.mpb-acct-line { max-width: 600px; font: 12.5px/1.65 var(--mp-f-ui); color: var(--mp-lcd-soft, var(--mp-lcd-dim)); }
+.mpb-acct-err { max-width: 600px; font: 12px/1.6 var(--mp-f-ui); color: #ff8f8f; }
+.mpb-acct-keys { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.mpb-acct-steps {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  max-width: 620px;
+  margin: 0;
+  padding: 14px 18px 14px 36px;
+  text-align: left;
+  font: 12.5px/1.6 var(--mp-f-ui);
+  color: var(--mp-lcd-text, var(--mp-lcd-fg));
+  border: 1px solid var(--mp-edge);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mp-lcd-bg) 70%, transparent);
+}
+.mpb-acct-steps li { padding-left: 4px; }
+.mpb-acct-steps li::marker { color: var(--mp-lit); font-weight: 800; }
+.mpb-acct-copy { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.mpb-acct-copy code {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font: 12px/1.4 var(--mp-f-mono);
+  color: var(--mp-lcd-fg);
+  background: var(--mp-lcd-bg);
+  border: 1px solid var(--mp-edge);
+  -webkit-user-select: all;
+  user-select: all;
+}
+.mpb-acct .mpb-acct-copykey, .mpb-acct .mpb-acct-link { height: 24px; padding: 0 10px; margin-top: 6px; margin-left: 2px; }
+.mpb-acct-steps li > .mpb-acct-link { display: inline-flex; margin-left: 8px; vertical-align: middle; }
+.mpb-acct-fields { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; justify-content: center; width: 100%; max-width: 620px; }
+.mpb-acct-field { display: grid; gap: 5px; flex: 1 1 260px; text-align: left; font: 700 10px/1.2 var(--mp-f-ui); letter-spacing: .12em; color: var(--mp-shell-dim); }
+.mpb-acct-input {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid var(--mp-edge);
+  font: 13px/1 var(--mp-f-mono);
+  color: var(--mp-lcd-fg);
+  background: var(--mp-lcd-bg);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .6);
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.mpb-acct-input:focus { border-color: var(--mp-lit); }
+.mpb-note {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 10px 12px 4px; padding: 10px 14px; border-radius: 8px;
+  font: 12px/1.55 var(--mp-f-ui); color: var(--mp-lcd-soft, var(--mp-lcd-dim));
+  border: 1px dashed color-mix(in srgb, var(--mp-lcd-fg) 30%, transparent);
+}
+.mpb-note > span { flex: 1 1 320px; }
+.mpb-note .mpc-lib { flex: none; }

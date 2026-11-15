@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Stream Player",
+  "version": "1.0",
+  "description": "A retro hi-fi player for Spotify and SoundCloud: your library, themes, a visualizer, lyrics, and a compact player that floats on top.",
+  "icons": {
+    "128": "icon128.png"
+  },
+  "permissions": [
+    "tabCapture",
+    "offscreen",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "https://api.spotify.com/*",
+    "https://accounts.spotify.com/*",
+    "https://soundcloud.com/*",
+    "https://on.soundcloud.com/*",
+    "https://lrclib.net/*"
+  ],
+  "action": {
+    "default_icon": {
+      "128": "icon128.png"
+    },
+    "default_title": "Stream Player"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
