@@ -80,7 +80,7 @@ Everything is in `extension/`. After a change, run `install.sh` again: it copies
 
 | What | Files |
 | --- | --- |
-| The interface | `player.js` and `player.css`. Converted from the Windows skin's `app/ui` files, now edited here directly; nothing is generated. |
+| The interface | `player.js` is made from the Apple Music player's skin ([Winapp Apple Music Skin](https://github.com/P4NZY/Winapp-apple-music-skin), `app/ui/player.js`) by `tools/convert-skin.py`. Run it again to bring in what changed there, such as new visualizer effects; changes of Stream Player's own go into that script. `player.css` is edited here: the skin's styles, plus a Stream Player section at the end. |
 | The services | `services/engine.js` is a player shaped like Apple's MusicKit, which is what the interface was written for. `services/spotify.js` and `services/soundcloud.js` plug into it and bring the library. `services/common.js` handles sign-in (OAuth with PKCE) and building the queue. |
 | Lyrics | `lyrics.js` |
 | Visualizer sound | `background.js` and `offscreen.js`: the extension listens to the player's own window and passes the sound on. |
