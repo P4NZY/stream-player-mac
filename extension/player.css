@@ -625,6 +625,17 @@ html[data-mp-layout="top"] .mpf-kanji { font-size: 72px; }
 .mp-opt[aria-checked="true"] .mp-switch::after { transform: translateX(20px); }
 .mp-opt[aria-checked="true"] .mp-switch .mp-led { left: 7px; }
 .mp-hint { margin-top: 8px; font-size: 11.5px; color: var(--mp-shell-dim); line-height: 1.7; }
+/* "while you play": only where the app can do it (the Windows app says so) */
+.mp-away-opts { display: none; }
+html[data-mp-caps~="popup"] .mp-away-opts { display: block; }
+.mp-opt-more { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 0 0 9px; font-size: 12.5px; }
+.mp-opt-more[hidden], .mp-dc[hidden], .mp-dc-state[hidden] { display: none; }
+.mp-opt-more .mpe-fit { flex: 1 1 86px; padding: 0 6px; white-space: nowrap; }
+.mp-opt-more .mpc-lib { height: 26px; }
+.mp-opt-label { flex: 1; min-width: 0; }
+.mp-dc .mp-dc-id { flex: 0 0 210px; width: 210px; font-family: var(--mp-f-mono); }
+.mp-dc .mp-hint { margin-top: 6px; }
+.mp-dc .mp-dc-state { margin: 0 0 2px; }
 .mp-kbd {
   padding: 1px 6px;
   border-radius: 4px;
@@ -633,6 +644,394 @@ html[data-mp-layout="top"] .mpf-kanji { font-size: 72px; }
   color: var(--mp-lcd-fg);
   font-family: var(--mp-f-mono);
   font-size: 10.5px;
+}
+
+/* --------------------------------------------------------------------------
+   4b. Themes of your own (player.js: "Themes of your own")
+       - their list in the themes panel, under the built-in ones
+       - the editor: a drawer down the right-hand side
+       - the photo behind the player
+   -------------------------------------------------------------------------- */
+
+.mp-swatch, .mp-swatch-name { min-width: 0; }
+.mp-swatch-en { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mp-user-head .mpc-lib { height: 22px; padding: 0 9px; }
+.mp-user-empty { margin: 0 0 2px; }
+.mp-user-empty[hidden], .mp-user-tools[hidden], .mp-user-msg[hidden] { display: none; }
+.mp-themes-user:empty { display: none; }
+.mp-user-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.mp-user-tools .mpc-lib { height: 26px; }
+.mp-user-tools [data-arm="1"] { color: var(--mp-lit) !important; }
+.mp-user-msg {
+  margin-top: 8px;
+  padding: 6px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--mp-edge);
+  background: var(--mp-lcd-bg);
+  color: var(--mp-lcd-text);
+  font: 11px/1.45 var(--mp-f-mono);
+  letter-spacing: .04em;
+  overflow-wrap: anywhere;
+}
+.mp-user-msg[data-kind="warn"] { color: var(--mp-lit); }
+
+#mp-editor {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2147483641;
+  width: min(332px, 100%);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  color: var(--mp-shell-text);
+  background: linear-gradient(180deg, var(--mp-shell-a), var(--mp-shell-b));
+  border-left: 1px solid var(--mp-edge);
+  box-shadow: inset 1px 0 0 var(--mp-hi), -12px 0 40px rgba(0, 0, 0, .45);
+  font-family: var(--mp-f-ui);
+  -webkit-user-select: none;
+  user-select: none;
+}
+#mp-editor[data-open="1"] { display: grid; }
+/* the player makes room, so that all of it shows beside the editor (the
+   compact window is made wider by the editor's width for this: player.js,
+   requestCompactSize) */
+@media (min-width: 900px) {
+  html[data-mp-edit="1"] #mp-app { right: 332px; }
+}
+@media (min-width: 780px) {
+  html[data-mp-mode="compact"][data-mp-edit="1"] #mp-app { right: 332px; }
+}
+.mpe-body { min-height: 0; overflow-y: auto; padding: 8px 14px 14px; }
+.mpe-body::-webkit-scrollbar-thumb { background-color: var(--mp-shell-dim) !important; }
+.mpe-hint { margin: 0 0 6px; line-height: 1.5; }
+.mpe-row { display: flex; align-items: center; gap: 8px; min-height: 34px; font-size: 12.5px; }
+.mpe-label { flex: 1; min-width: 0; }
+.mpe-name { flex: 0 0 196px; }
+.mpe-colour {
+  appearance: none;
+  flex: none;
+  width: 46px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--mp-edge);
+  border-radius: 6px;
+  background: var(--mp-lo);
+  box-shadow: 0 1px 0 var(--mp-hi);
+  cursor: pointer;
+}
+.mpe-colour::-webkit-color-swatch-wrapper { padding: 2px; }
+.mpe-colour::-webkit-color-swatch { border: 0; border-radius: 4px; }
+.mpe-colour:focus-visible, .mpe-range:focus-visible { outline: 2px solid var(--mp-lit); outline-offset: 2px; }
+.mpe-hex { flex: 0 0 82px; font-family: var(--mp-f-mono); }
+.mpe-hex[data-bad="1"] { border-color: var(--mp-lit); }
+/* which part of the player the pictures below are for: two keys (behind the
+   whole player, behind the compact one), and a little map of the full player
+   with a key for each of its parts - showing its picture, lit when it has one */
+.mpe-where { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 4px 0 6px; }
+.mpe-area {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border-radius: 6px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  white-space: nowrap;
+}
+.mpe-area .mp-jp { font-weight: 400; letter-spacing: .04em; opacity: .7; }
+.mpe-map {
+  display: grid;
+  grid-template-columns: 22% minmax(0, 1fr) 31%;
+  grid-template-rows: 30px repeat(3, minmax(0, 1fr));
+  grid-template-areas: "top top top" "nav list viz" "nav list lyr" "nav list queue";
+  gap: 4px;
+  height: 138px;
+  padding: 5px;
+  border-radius: 8px;
+  border: 1px solid var(--mp-edge);
+  background: var(--mp-lcd-bg) center / cover no-repeat;      /* (the whole player's picture, when there is one) */
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .6), 0 1px 0 var(--mp-hi);
+}
+.mpe-reg {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid var(--mp-edge);
+  color: var(--mp-shell-text);
+  background: color-mix(in srgb, var(--mp-shell-b) 72%, transparent) center / cover no-repeat;
+  font: 800 8.5px/1 var(--mp-f-ui);
+  letter-spacing: .12em;
+  cursor: pointer;
+}
+.mpe-reg[data-display="1"], .mpe-reg[data-none="1"] {
+  color: var(--mp-lcd-fg);
+  background-color: color-mix(in srgb, var(--mp-lcd-bg) 86%, transparent);
+}
+.mpe-reg[data-none="1"] { opacity: .4; cursor: default; }
+.mpe-reg span {
+  max-width: calc(100% - 6px);
+  overflow: hidden;
+  padding: 3px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, .5);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mpe-reg .mp-led { position: absolute; top: 4px; right: 4px; }
+.mpe-reg:hover:not([data-none]) { border-color: var(--mp-shell-dim); }
+.mpe-reg[data-has="1"] > .mp-led, .mpe-area[data-has="1"] > .mp-led { background: var(--mp-lit); box-shadow: 0 0 6px var(--mp-lit); }
+.mpe-reg[aria-pressed="true"] { border-color: var(--mp-lit); box-shadow: 0 0 0 1px var(--mp-lit), 0 0 10px color-mix(in srgb, var(--mp-lit) 45%, transparent); }
+.mpe-reg[aria-pressed="true"] span { color: var(--mp-lit); }
+.mpe-area[aria-pressed="true"] { color: var(--mp-lit) !important; box-shadow: inset 0 2px 4px rgba(0, 0, 0, .5), 0 0 0 1px var(--mp-lit); }
+.mpe-reg:focus-visible, .mpe-area:focus-visible, .mpe-frame:focus-visible { outline: 2px solid var(--mp-lit); outline-offset: 2px; }
+.mpe-area-say { margin: 7px 0 0; min-height: 2.9em; }
+
+/* the framer: all of the picture, the point it is placed by, and what shows
+   of it in its part (outside that, dimmed) - drag on it, scroll on it */
+.mpe-frame {
+  position: relative;
+  height: 150px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 7px;
+  border: 1px solid var(--mp-edge);
+  background: var(--mp-lcd-bg) center / contain no-repeat;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .6), 0 1px 0 var(--mp-hi);
+  cursor: crosshair;
+  touch-action: none;
+}
+.mpe-frame[data-has="0"] { cursor: pointer; }
+.mpe-frame[data-has="0"]::after {
+  content: "NOTHING HERE YET \2013  CLICK TO CHOOSE A FILE";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  text-align: center;
+  color: var(--mp-lcd-dim);
+  font: 9.5px/1.5 var(--mp-f-mono);
+  letter-spacing: .12em;
+}
+.mpe-view {
+  position: absolute;
+  border: 1.5px dashed rgba(255, 255, 255, .95);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .55), 0 0 0 999px rgba(0, 0, 0, .45);
+  pointer-events: none;
+}
+.mpe-aim {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .7), inset 0 0 0 1px rgba(0, 0, 0, .5);
+  pointer-events: none;
+}
+.mpe-aim::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 2px;
+  margin: -1px 0 0 -1px;
+  background: #fff;
+}
+.mpe-view[hidden], .mpe-aim[hidden] { display: none; }
+.mpe-photo-row { display: flex; gap: 8px; margin: 8px 0 2px; }
+/* what kind it is, when it moves */
+.mpe-frame[data-kind="anim"]::before,
+.mpe-frame[data-kind="video"]::before {
+  content: "GIF";
+  position: absolute;
+  z-index: 1;
+  left: 5px;
+  bottom: 5px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, .7);
+  color: #fff;
+  font: 700 8.5px/1 var(--mp-f-mono);
+  letter-spacing: .12em;
+}
+.mpe-frame[data-kind="video"]::before { content: "VIDEO"; }
+#mp-editor .mpe-select { flex: 0 0 172px; width: 172px; height: 26px; padding: 0 6px; cursor: pointer; }
+.mpe-select option { color: #111; background: #fff; }
+.mpe-font { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.mpe-font-name { flex: 1; min-width: 0; font-size: 11.5px; line-height: 1.5; color: var(--mp-shell-dim); overflow-wrap: anywhere; }
+.mpe-fit:disabled { opacity: .35; cursor: default; }
+.mpe-photo-keys { display: grid; gap: 6px; justify-items: start; }
+.mpe-photo-keys.mpe-photo-row { display: flex; }
+.mpe-photo-keys .mpc-lib { height: 26px; }
+.mpe-photo-keys .mpc-lib[hidden], .mpe-opts[hidden], .mpe-row[hidden] { display: none; }
+.mpe-fits { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin: 10px 0 4px; }
+.mpe-fit { height: 26px; border-radius: 6px; font-size: 9.5px; font-weight: 800; letter-spacing: .1em; }
+.mpe-fits .mpe-fit { padding: 0; font-size: 8.5px; letter-spacing: .06em; }       /* (five in a row) */
+.mpe-fit[aria-pressed="true"] { color: var(--mp-lit) !important; box-shadow: inset 0 2px 4px rgba(0, 0, 0, .5); }
+.mpe-range { flex: 0 0 128px; width: 128px; height: 18px; margin: 0; accent-color: var(--mp-lit); cursor: pointer; }
+.mpe-val { flex: 0 0 42px; text-align: right; font: 11px/1 var(--mp-f-mono); color: var(--mp-shell-dim); }
+.mpe-foot {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--mp-edge);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--mp-hi) 60%, transparent);
+}
+.mpe-foot .mpc-lib { flex: 1; height: 32px; justify-content: center; }
+
+/* ---- a photo behind the player ----
+   Two layers under everything in #mp-app: the photo, then the body colour
+   laid over it (so the lettering stays readable). player.js sets data-photo
+   (how it fits) and the --mp-photo-* values on #mp-app. The pictures for
+   parts of the player lie over these two (z-index -1, further down). */
+#mp-app[data-photo]::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--mp-photo-blur, 0px) * -2.5);
+  z-index: -3;
+  pointer-events: none;
+  background: var(--mp-photo) var(--mp-photo-x, 50%) var(--mp-photo-y, 50%) / cover no-repeat;
+  filter: blur(var(--mp-photo-blur, 0px)) var(--mp-photo-fx, );
+  /* (--mp-photo-flip: mirrored about the middle of the player, or nothing) */
+  transform: var(--mp-photo-flip, scaleX(1)) scale(var(--mp-photo-k, 1));
+  transform-origin: var(--mp-photo-x, 50%) var(--mp-photo-y, 50%);
+}
+#mp-app[data-photo="contain"]::before { background-size: contain; }
+#mp-app[data-photo="stretch"]::before { background-size: 100% 100%; }
+#mp-app[data-photo="tile"]::before {
+  background-size: calc(var(--mp-photo-k, 1) * 280px) auto;
+  background-repeat: repeat;
+  transform: var(--mp-photo-flip, none);
+}
+/* a video is an element of its own (it cannot be a background), laid out by
+   the same values; FIT and STRETCH as for a photo */
+#mp-app > .mp-bgv {
+  position: absolute;
+  left: calc(var(--mp-photo-blur, 0px) * -2.5);
+  top: calc(var(--mp-photo-blur, 0px) * -2.5);
+  width: calc(100% + var(--mp-photo-blur, 0px) * 5);
+  height: calc(100% + var(--mp-photo-blur, 0px) * 5);
+  z-index: -3;
+  pointer-events: none;
+  object-fit: cover;
+  object-position: var(--mp-photo-x, 50%) var(--mp-photo-y, 50%);
+  filter: blur(var(--mp-photo-blur, 0px)) var(--mp-photo-fx, );
+  transform: var(--mp-photo-flip, scaleX(1)) scale(var(--mp-photo-k, 1));
+  transform-origin: var(--mp-photo-x, 50%) var(--mp-photo-y, 50%);
+}
+#mp-app[data-photo="contain"] > .mp-bgv { object-fit: contain; }
+#mp-app[data-photo="stretch"] > .mp-bgv { object-fit: fill; }
+/* a moving picture stops while nobody can see the player */
+html[data-mp-seen="0"] #mp-app[data-photo-kind="anim"]::before { display: none; }
+/* the "Album cover" theme: one cover fades into the next */
+#mp-app[data-photo-kind="live"]::before { transition: background-image .9s linear; }
+#mp-app[data-photo]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--mp-shell-a) var(--mp-photo-tint, 35%), transparent),
+    color-mix(in srgb, var(--mp-shell-b) var(--mp-photo-tint, 35%), transparent));
+}
+/* the displays let some of it through, like smoked glass */
+#mp-app[data-photo] .mpc-lcd,
+#mp-app[data-photo] .mpa-browser,
+#mp-app[data-photo] .mpc-pl-list,
+#mp-app[data-photo] .mpp-screen:not(.mpv-screen) {
+  background: rgba(var(--mp-lcd-bg-rgb), var(--mp-glass, .75));
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+}
+
+/* ---- pictures for parts of the player ----
+   Each part that can have a picture has a layer for it (player.js:
+   arLayer / applyAreas): the picture, and the body colour - or, on a
+   display, the display colour - laid over it. The layer lies under what the
+   part shows: the top and the library are laid over their places in the
+   player's grid; the list's and the lyrics' are inside their displays; the
+   queue's is in the queue's place, under its list (which scrolls). */
+.mp-ar {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.mp-ar[data-on="1"] { display: block; }
+.mp-ar-top { grid-row: 1 / 3; grid-column: 1 / -1; }
+.mp-ar-nav { grid-area: nav; }
+html[data-mp-mode="compact"] .mp-ar-nav { display: none !important; }
+.mpc-pl { position: relative; }
+.mp-ar-queue {
+  grid-row: 2 / 3;                  /* (both lines: for a layer like this one, a missing end means the panel's edge) */
+  grid-column: 1 / 2;
+  border-radius: 7px;
+  background: var(--mp-lcd-bg);
+}
+/* mirrored: the whole layer, about its middle (the same part of the picture shows) */
+.mp-ar[data-flip="1"] { transform: scaleX(-1); }
+.mp-ar-pic {
+  position: absolute;
+  inset: calc(var(--ar-b, 0px) * -2.5);
+  background: var(--ar-pic, none) var(--ar-x, 50%) var(--ar-y, 50%) / cover no-repeat;
+  filter: blur(var(--ar-b, 0px)) var(--ar-fx, );
+  transform: scale(var(--ar-k, 1));
+  transform-origin: var(--ar-x, 50%) var(--ar-y, 50%);
+}
+video.mp-ar-pic {
+  width: calc(100% + var(--ar-b, 0px) * 5);
+  height: calc(100% + var(--ar-b, 0px) * 5);
+  object-fit: cover;
+  object-position: var(--ar-x, 50%) var(--ar-y, 50%);
+}
+.mp-ar[data-fit="contain"] > .mp-ar-pic { background-size: contain; object-fit: contain; }
+.mp-ar[data-fit="stretch"] > .mp-ar-pic { background-size: 100% 100%; object-fit: fill; }
+.mp-ar[data-fit="tile"] > .mp-ar-pic {
+  background-size: calc(var(--ar-k, 1) * 220px) auto;
+  background-repeat: repeat;
+  transform: none;
+}
+.mp-ar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--mp-shell-a) var(--ar-tint, 35%), transparent),
+    color-mix(in srgb, var(--mp-shell-b) var(--ar-tint, 35%), transparent));
+}
+.mp-ar-list::after, .mp-ar-lyr::after, .mp-ar-queue::after {
+  background: color-mix(in srgb, var(--mp-lcd-bg) var(--ar-tint, 55%), transparent);
+}
+/* a moving picture stops while nobody can see the player */
+html[data-mp-seen="0"] .mp-ar[data-kind="anim"] > .mp-ar-pic { display: none; }
+/* the parts' own colours step aside for their pictures */
+#mp-app[data-ar-nav] .mpa-nav { background: none; }
+#mp-app[data-ar-queue] .mpc-pl-list {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* the displays on the top let its picture through, like smoked glass
+   (the "see-through displays" knob of the top's picture) */
+#mp-app[data-ar-top] .mpc-deck .mpc-lcd,
+#mp-app[data-ar-top] .mpa-search {
+  background: rgba(var(--mp-lcd-bg-rgb), var(--mp-glass-top, .75));
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
 }
 
 /* --------------------------------------------------------------------------
@@ -802,7 +1201,7 @@ html[data-mp-mode="full"] .mpc-deck {
   color: var(--mp-lcd-fg);
   text-shadow: var(--mp-glow);
 }
-.mpc-viz { grid-column: 1 / -1; width: 100%; height: 100%; }
+.mpc-viz { grid-column: 1 / -1; width: 100%; height: 100%; cursor: pointer; }
 
 .mpc-info {
   grid-area: info;
@@ -1806,130 +2205,3 @@ html[data-mp-mode] .only-narrow { display: none; }
   html[data-mp-mode="full"] .mpc-brand { display: none; }
   html[data-mp-mode="full"] .mpa-search { flex: 1 1 auto; }
 }
-
-/* ==========================================================================
-   Stream Player
-   ========================================================================== */
-html[data-mp-theme] {
-  --sp-spotify: #1ed760;
-  --sp-soundcloud: #ff7a1f;
-}
-html, body { background: var(--mp-shell-b, #141a27); }
-
-/* ---- the switch between the services (top strip) ---- */
-.mpc-svc {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 24px;
-  padding: 0 9px;
-  border-radius: 6px;
-  font: 800 9.5px/1 var(--mp-f-ui);
-  letter-spacing: .14em;
-  cursor: pointer;
-}
-.mpc-svc-name { display: inline-flex; align-items: center; gap: 5px; opacity: .5; transition: opacity .15s ease, color .15s ease; }
-.mpc-svc .mpc-svc-name .mp-led { background: var(--mp-lo); box-shadow: inset 0 1px 1px rgba(0, 0, 0, .6); }
-.mpc-svc[data-svc="spotify"] .mpc-svc-a,
-.mpc-svc[data-svc="soundcloud"] .mpc-svc-b { opacity: 1; }
-.mpc-svc[data-svc="spotify"] .mpc-svc-a .mp-led { background: var(--sp-spotify); box-shadow: 0 0 6px var(--sp-spotify); }
-.mpc-svc[data-svc="soundcloud"] .mpc-svc-b .mp-led { background: var(--sp-soundcloud); box-shadow: 0 0 6px var(--sp-soundcloud); }
-.mpc-svc-track {
-  position: relative;
-  flex: none;
-  width: 32px;
-  height: 14px;
-  border-radius: 7px;
-  border: 1px solid var(--mp-edge);
-  background: var(--mp-lcd-bg);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .75), 0 1px 0 var(--mp-hi);
-}
-.mpc-svc-knob {
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 14px;
-  height: 10px;
-  border-radius: 5px;
-  border: 1px solid var(--mp-edge);
-  background: linear-gradient(180deg, color-mix(in srgb, #fff 30%, var(--mp-shell-a)), var(--mp-shell-b));
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .5);
-  transition: left .2s cubic-bezier(.3, 1.4, .6, 1);
-}
-.mpc-svc[data-svc="soundcloud"] .mpc-svc-knob { left: 15px; }
-.mpc-svc-knob::after {
-  content: "";
-  position: absolute;
-  inset: 3px 6px;
-  border-radius: 1px;
-  background: repeating-linear-gradient(90deg, var(--mp-lo) 0 1px, transparent 1px 2px);
-}
-/* the compact player's strip is narrow: the brand gives way to the switch */
-html[data-mp-mode="compact"] .mpc-brand-jp { display: none; }
-html[data-mp-mode="compact"] .mpc-svc { padding: 0 7px; gap: 5px; letter-spacing: .1em; }
-@media (max-width: 560px) {
-  html[data-mp-mode="compact"] .mpc-brand { display: none; }
-}
-@media (max-width: 899px) {
-  html[data-mp-mode="full"] .mpc-svc { letter-spacing: .08em; padding: 0 7px; }
-}
-
-/* ---- signing in, and setting a service up ---- */
-.mpb-acct { align-content: start; justify-items: center; height: auto; max-width: 680px; margin: 0 auto; padding-top: 30px; }
-.mpb-acct-line { max-width: 600px; font: 12.5px/1.65 var(--mp-f-ui); color: var(--mp-lcd-soft, var(--mp-lcd-dim)); }
-.mpb-acct-err { max-width: 600px; font: 12px/1.6 var(--mp-f-ui); color: #ff8f8f; }
-.mpb-acct-keys { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.mpb-acct-steps {
-  display: grid;
-  gap: 10px;
-  width: 100%;
-  max-width: 620px;
-  margin: 0;
-  padding: 14px 18px 14px 36px;
-  text-align: left;
-  font: 12.5px/1.6 var(--mp-f-ui);
-  color: var(--mp-lcd-text, var(--mp-lcd-fg));
-  border: 1px solid var(--mp-edge);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--mp-lcd-bg) 70%, transparent);
-}
-.mpb-acct-steps li { padding-left: 4px; }
-.mpb-acct-steps li::marker { color: var(--mp-lit); font-weight: 800; }
-.mpb-acct-copy { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-.mpb-acct-copy code {
-  padding: 3px 8px;
-  border-radius: 5px;
-  font: 12px/1.4 var(--mp-f-mono);
-  color: var(--mp-lcd-fg);
-  background: var(--mp-lcd-bg);
-  border: 1px solid var(--mp-edge);
-  -webkit-user-select: all;
-  user-select: all;
-}
-.mpb-acct .mpb-acct-copykey, .mpb-acct .mpb-acct-link { height: 24px; padding: 0 10px; margin-top: 6px; margin-left: 2px; }
-.mpb-acct-steps li > .mpb-acct-link { display: inline-flex; margin-left: 8px; vertical-align: middle; }
-.mpb-acct-fields { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; justify-content: center; width: 100%; max-width: 620px; }
-.mpb-acct-field { display: grid; gap: 5px; flex: 1 1 260px; text-align: left; font: 700 10px/1.2 var(--mp-f-ui); letter-spacing: .12em; color: var(--mp-shell-dim); }
-.mpb-acct-input {
-  height: 30px;
-  padding: 0 10px;
-  border-radius: 6px;
-  border: 1px solid var(--mp-edge);
-  font: 13px/1 var(--mp-f-mono);
-  color: var(--mp-lcd-fg);
-  background: var(--mp-lcd-bg);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .6);
-  outline: none;
-  -webkit-user-select: text;
-  user-select: text;
-}
-.mpb-acct-input:focus { border-color: var(--mp-lit); }
-.mpb-note {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  margin: 10px 12px 4px; padding: 10px 14px; border-radius: 8px;
-  font: 12px/1.55 var(--mp-f-ui); color: var(--mp-lcd-soft, var(--mp-lcd-dim));
-  border: 1px dashed color-mix(in srgb, var(--mp-lcd-fg) 30%, transparent);
-}
-.mpb-note > span { flex: 1 1 320px; }
-.mpb-note .mpc-lib { flex: none; }

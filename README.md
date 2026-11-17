@@ -18,7 +18,8 @@ Unofficial, not made by or affiliated with Spotify or SoundCloud. Playing Spotif
 - **Lyrics panel** that follows the song (from [LRCLIB](https://lrclib.net)).
 - **Queue panel.** With shuffle on, the song you click plays first and the rest is shuffled after it.
 - **Your own playlist order:** drag playlists, or use Alt+↑ / Alt+↓. RESET goes back to the service's order.
-- **18 colour themes**, including Hatsune Miku, Kasane Teto and Ado.
+- **18 colour themes**, including Hatsune Miku, Kasane Teto and Ado, and **Album cover**, whose colours come from the cover of the song playing.
+- **Themes of your own:** colours, lettering, and pictures (a photo, a moving GIF or a short video) behind the whole player or behind each part of it, framed by dragging. EXPORT saves a theme as one `.mpskin` file, which the Apple Music player opens too, and the other way round.
 - **Compact player** (Ctrl+M) that floats above every other window, whatever app is in front.
 
 ## Install
@@ -80,7 +81,7 @@ Everything is in `extension/`. After a change, run `install.sh` again: it copies
 
 | What | Files |
 | --- | --- |
-| The interface | `player.js` is made from the Apple Music player's skin ([Winapp Apple Music Skin](https://github.com/P4NZY/Winapp-apple-music-skin), `app/ui/player.js`) by `tools/convert-skin.py`. Run it again to bring in what changed there, such as new visualizer effects; changes of Stream Player's own go into that script. `player.css` is edited here: the skin's styles, plus a Stream Player section at the end. |
+| The interface | `player.js` and `player.css` come from the Apple Music player's skin ([Winapp Apple Music Skin](https://github.com/P4NZY/Winapp-apple-music-skin), `app/ui/`), through `tools/convert-skin.py`: `python3 tools/convert-skin.py <that repo>/app/ui/player.js extension/player.js`. Run it again to bring in what changed there; changes of Stream Player's own go into that script. Stream Player's own styles are in `stream.css`. |
 | The services | `services/engine.js` is a player shaped like Apple's MusicKit, which is what the interface was written for. `services/spotify.js` and `services/soundcloud.js` plug into it and bring the library. `services/common.js` handles sign-in (OAuth with PKCE) and building the queue. |
 | Lyrics | `lyrics.js` |
 | Visualizer sound | `background.js` and `offscreen.js`: the extension listens to the player's own window and passes the sound on. |

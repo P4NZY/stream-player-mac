@@ -8,12 +8,13 @@
 #
 #     python3 tools/convert-skin.py <Winapp-apple-music-skin>/app/ui/player.js extension/player.js
 #
+# It also copies the skin's player.css (next to its player.js) as it is: the
+# styles of Stream Player's own are in extension/stream.css.
+#
 # Change Stream Player's player.js here (in this script), not in player.js
 # itself: the next run would undo it. Every replacement has to match exactly
 # as often as stated; when the skin has changed in one of those places, the
 # script stops and says which, and that replacement needs bringing up to date.
-# (player.css is kept by hand: the skin's player.css plus the Stream Player
-# section at its end.)
 import re, sys
 
 src, dst = sys.argv[1], sys.argv[2]
@@ -154,18 +155,24 @@ rep("""  on('authorizationStatusDidChange', function () { setTimeout(onAuthChang
   onState();
   refreshAll();
   onAuthChange();
+  rcBoot();
 }""", """  on('authorizationStatusDidChange', function () { setTimeout(onAuthChange, 300); });
 }""")
 
-rep("""// Apple shows playback failures in a dialog on its own page, which is not
-// drawn in our faces - so say it here.
+rex(r"// Apple shows playback failures in a dialog on its own page, which is not\n// drawn in our faces - so say it here, and try to get the music back\.\nfunction onPlaybackError\(e\) \{\n.*?\n\}\n",
+"""// Playback failures, said on the song line. (The Apple Music player also
+// tries to get the music back by itself after one - made for the ways Apple's
+// player fails. Here each service looks after its own: SoundCloud skips a
+// song that will not play, and Spotify's failures are about the account or
+// the device, which trying again would not mend. So this only says so.)
 function onPlaybackError(e) {
   var what = errText(e);
-  var hint = /LICENSE/i.test(what) ? ' - closing and reopening the app usually clears this' : '';""",
-"""// Playback failures, said on the song line.
-function onPlaybackError(e) {
-  var what = errText(e);
-  var hint = '';""")
+  dlog('playback error: ' + what);
+  notice('PLAYBACK ERROR: ' + what);
+}
+""")
+rex(r"function rcWatch\(\) \{\n.*?\n\}\n", """function rcWatch() {}                   // (no getting the music back by itself: see onPlaybackError)
+""")
 
 # ----------------------------------------------------------------- sound ----
 rep("""// The app (MusicPlayer.exe) listens to its own sound output and, for as long
@@ -912,6 +919,7 @@ rep("""  if (mode !== 'full' && mode !== 'compact' && mode !== 'apple') return;"
 """  if (mode !== 'full' && mode !== 'compact') return;""")
 rep("""  if (mode === 'apple') {
     send('tap|0');
+    bgvSync();
     watchApple(true);
     // Apple's page was not being drawn; let it measure itself again
     setTimeout(function () { placeControls(); try { window.dispatchEvent(new Event('resize')); } catch (e) {} }, 60);
@@ -1017,7 +1025,7 @@ rep("""    setMode(S.mode === 'full' ? 'compact' : 'full');
     return;
   }
   if (e.key === 'Escape') {""")
-rep("""  if (S.mode === 'apple' || S.panelOpen) return;""", """  if (S.panelOpen) return;""")
+rep("""  if (S.mode === 'apple' || S.panelOpen) {""", """  if (S.panelOpen) {""")
 
 # ------------------------------------------------------------------- boot ----
 rex(r"  // Apple's player never came up \(no network when the app started, say\):\n.*?\n  \}, 45000\);\n", '')
@@ -1231,10 +1239,15 @@ rep("""  hookMusic();
 # each service opens on its first library entry (SoundCloud: Likes & Saved)
 rep("""  B.view = back ? back.view : { kind: 'recent' };""", """  B.view = back ? back.view : { kind: (next.nav && next.nav[0] && next.nav[0].go) || 'recent' };""")
 rep("""  renderNavPlaylists();
-  B.view = { kind: 'recent' };
+  // (a page loaded again to get the music back shows what the one before it showed)
+  B.view = (RC.note && RC.note.view) || { kind: 'recent' };
   renderView();""", """  renderNavPlaylists();
   B.view = { kind: (SVC.nav && SVC.nav[0] && SVC.nav[0].go) || 'recent' };
   renderView();""")
+
+# the "Album cover" theme: Spotify's and SoundCloud's artwork addresses, about 300 pixels
+rep("""  url = tpl.replace('{w}', 300).replace('{h}', 300).replace('{f}', 'jpg').replace('{c}', 'bb');""",
+"""  url = artUrl(tpl, 150);                // (Spotify's and SoundCloud's artwork: about 300 pixels)""")
 
 # ---------------------------------------------------------------- wrapper ----
 s = """// Stream Player - the player (see the notes below). boot.js loads it after the
@@ -1251,3 +1264,9 @@ left = [w for w in ('MusicKit', 'apple.com', 'storefront(', 'api(', 'packTile', 
 print('left over:', left)
 open(dst, 'w', encoding='utf-8').write(s)
 print('written', len(s))
+
+import os, shutil
+css = os.path.join(os.path.dirname(os.path.abspath(src)), 'player.css')
+if os.path.exists(css):
+    shutil.copyfile(css, os.path.join(os.path.dirname(os.path.abspath(dst)), 'player.css'))
+    print('copied the skin\'s player.css')
