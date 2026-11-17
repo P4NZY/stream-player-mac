@@ -343,8 +343,11 @@ start)
   # (--allowlisted-extension-id: lets the visualizer hear the music without a
   #  click on the extension's toolbar button first - which the player's window
   #  does not have)
+  # (--test-type: without it the browser puts a warning bar about that switch,
+  #  "unsupported command-line flag", across the top of the window at every
+  #  start. It changes nothing else the player uses.)
   ARGS=(--user-data-dir="$PROFILE" --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required
-        --load-extension="$EXT" --allowlisted-extension-id="$EXT_ID" --app="$URL")
+        --load-extension="$EXT" --allowlisted-extension-id="$EXT_ID" --test-type --app="$URL")
 
   # The first time, the extension may still have to be switched on in this
   # profile by hand: Google Chrome (since version 137) ignores --load-extension.
@@ -385,7 +388,7 @@ DIALOG
   ;;
 show)
   if player_pid >/dev/null; then
-    "$EXE" --user-data-dir="$PROFILE" --app="$URL#mp-show" >/dev/null 2>&1 &
+    "$EXE" --user-data-dir="$PROFILE" --test-type --app="$URL#mp-show" >/dev/null 2>&1 &
   fi
   ;;
 esac
