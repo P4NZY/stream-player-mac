@@ -1016,6 +1016,12 @@ video.mp-ar-pic {
 .mp-ar-list::after, .mp-ar-lyr::after, .mp-ar-queue::after {
   background: color-mix(in srgb, var(--mp-lcd-bg) var(--ar-tint, 55%), transparent);
 }
+/* The list's and the lyrics' pictures lie inside their displays, under what
+   the display shows. The display has to hold that layer itself (a stacking
+   context of its own): otherwise a layer under its content is drawn under
+   its dark background too, out of sight. */
+#mp-app[data-ar-list] .mpa-browser,
+#mp-app[data-ar-lyr] .mpl-screen { isolation: isolate; }
 /* a moving picture stops while nobody can see the player */
 html[data-mp-seen="0"] .mp-ar[data-kind="anim"] > .mp-ar-pic { display: none; }
 /* the parts' own colours step aside for their pictures */
